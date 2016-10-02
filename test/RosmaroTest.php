@@ -9,10 +9,15 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Cmd\AddOneSymbol;
+use lukaszmakuch\Rosmaro\Cmd\PrependSymbols;
 use lukaszmakuch\Rosmaro\State\HashAppender;
 use lukaszmakuch\Rosmaro\State\SymbolPrepender;
+use lukaszmakuch\Rosmaro\StateDataStorages\InMemoryStateDataStorage;
+use lukaszmakuch\Rosmaro\StateVisitors\CallableBasedVisitor;
+use PHPUnit_Framework_TestCase;
 
-class RosmaroTest extends \PHPUnit_Framework_TestCase
+class RosmaroTest extends PHPUnit_Framework_TestCase
 {
     public function testTransitions()
     {
@@ -36,53 +41,45 @@ class RosmaroTest extends \PHPUnit_Framework_TestCase
                 "prepend_a" => new SymbolPrepender("a"),
                 "prepend_b" => new SymbolPrepender("b"),
             ],
-            new StateDataStorages\InMemoryStateDataStorage()
+            new InMemoryStateDataStorage()
         );
         
-        $this->assertState($r, HashAppender::class, function (HashAppender $s) { return (
-            $s->getBuiltMessage() == ""
-        ); });
+        $assertHashAppenderWith = function ($msg) use ($r) {
+            $this->assertState($r, HashAppender::class, function (HashAppender $s) use ($msg) { return (
+                $s->getBuiltMessage() == $msg
+            ); });
+        };
         
-        $r->handle(new Cmd\AddOneSymbol());
+        $assertSymbolPrependerWith = function ($msg) use ($r) {
+            $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) use ($msg) { return (
+                $s->fetchMessage() == $msg
+            ); });
+        }; 
         
-        $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) { return (
-            $s->fetchMessage() == "#"
-        ); });
+        $assertHashAppenderWith("");
+        $r->handle(new AddOneSymbol());
         
-        $r->handle(new Cmd\PrependSymbols(1));
+        $assertSymbolPrependerWith("#");
+        $r->handle(new PrependSymbols(1));
         
-        $this->assertState($r, HashAppender::class, function (HashAppender $s) { return (
-            $s->getBuiltMessage() == "a#"
-        ); });
+        $assertHashAppenderWith("a#");
+        $r->handle(new AddOneSymbol());
         
-        $r->handle(new Cmd\AddOneSymbol());
+        $assertSymbolPrependerWith("a##");
+        $r->handle(new PrependSymbols(2));
         
-        $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) { return (
-            $s->fetchMessage() == "a##"
-        ); });
+        $assertSymbolPrependerWith("aaa##");
+        $r->handle(new PrependSymbols(1));
         
-        $r->handle(new Cmd\PrependSymbols(2));
+        $assertSymbolPrependerWith("baaa##");
+        $r->handle(new PrependSymbols(1));
         
-        $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) { return (
-            $s->fetchMessage() == "aaa##"
-        ); });
-        
-        $r->handle(new Cmd\PrependSymbols(1));
-        
-        $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) { return (
-            $s->fetchMessage() == "baaa##"
-        ); });
-        
-        $r->handle(new Cmd\PrependSymbols(1));
-        
-        $this->assertState($r, SymbolPrepender::class, function (SymbolPrepender $s) { return (
-            $s->fetchMessage() == "bbaaa##"
-        ); });
+        $assertSymbolPrependerWith("bbaaa##");
     }
     
     private function assertState(State $s, $expectedClass, callable $acceptor)
     {
-        $s->accept(new StateVisitors\CallableBasedVisitor(function (State $actualState) use ($expectedClass, $acceptor) {
+        $s->accept(new CallableBasedVisitor(function (State $actualState) use ($expectedClass, $acceptor) {
             $this->assertInstanceOf($expectedClass, $actualState);
             $this->assertTrue($acceptor($actualState));
         }));
