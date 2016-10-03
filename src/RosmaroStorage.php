@@ -41,6 +41,6 @@ class RosmaroStorage
     public function removeBy($id)
     {
         $this->getStoredOrNewBy($id)->cleanUp();
-        $this->dataStorageForInstances->getExistingOrNewWith($id)->removeAllData();
+        $this->dataStorageForInstances->removeBy($id);
     }
 }
