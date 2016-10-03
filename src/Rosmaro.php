@@ -11,11 +11,6 @@ namespace lukaszmakuch\Rosmaro;
 
 class Rosmaro implements State
 {
-    /**
-     * @var StateTpl
-     */
-    private $currentState;
-    private $currentStateId;
     private $initialStateId;
     private $stateDataStorage;
     private $transitions;
@@ -37,33 +32,20 @@ class Rosmaro implements State
         $this->transitions = $transtions;
         $this->statePrototypes = $statePrototypes;
         $this->initialStateId = $initialStateId;
-        
-        try {
-            $stateData = $stateDataStorage->getRecent();
-            $this->setCurrentState($stateData->getId(), $stateData->getStateId(), $stateData->getStateContext());
-        } catch (Exception\StateDataNotFound $e) {
-            $this->setCurrentState(null, $initialStateId, new Context());
-        }
     }
 
     public function accept(StateVisitor $v)
     {
-        return $this->currentState->accept($v);
+        return $this->getCurrentState()->accept($v);
     }
 
     public function handle($cmd)
     {
-        $maybeTransitionRequest = $this->currentState->handle($cmd);
+        $maybeTransitionRequest = $this->getCurrentState()->handle($cmd);
         if (!is_null($maybeTransitionRequest)) {
-            $stateInstanceId = uniqid();
-            $this->setCurrentState(
-                $stateInstanceId,
-                $this->transitions[$this->currentStateId][$maybeTransitionRequest->getEdge()],
-                $maybeTransitionRequest->getStateContext()
-            );
             $this->stateDataStorage->store(new StateData(
-                $stateInstanceId, 
-                $this->currentStateId, 
+                uniqid(), 
+                $this->transitions[$this->getCurrentStateId()][$maybeTransitionRequest->getEdge()], 
                 $maybeTransitionRequest->getStateContext()
             ));
         }
@@ -75,7 +57,7 @@ class Rosmaro implements State
     public function getAllStates()
     {
         return array_values(array_merge([
-            $this->getState(null, $this->initialStateId, new Context())
+            $this->buildState(null, $this->initialStateId, new Context())
         ], array_map(function (StateData $stateData) {
             $s = clone $this->statePrototypes[$stateData->getStateId()];
             $s->setId($stateData->getId());
@@ -86,13 +68,7 @@ class Rosmaro implements State
     
     public function revertTo(State $s)
     {
-        try {
-            $this->stateDataStorage->revertTo($s->getId());
-            $stateData = $this->stateDataStorage->getRecent();
-            $this->setCurrentState($stateData->getId(), $stateData->getStateId(), $stateData->getStateContext());
-        } catch (\lukaszmakuch\Rosmaro\Exception\StateDataNotFound $e) {
-            $this->setCurrentState(null, $this->initialStateId, new Context());
-        }
+        $this->stateDataStorage->revertTo($s->getId());
     }
     
     public function cleanUp()
@@ -102,13 +78,40 @@ class Rosmaro implements State
         }
     }
     
-    private function setCurrentState($stateInstanceId, $stateId, Context $context)
+    /**
+     * @return State
+     */
+    private function getCurrentState()
     {
-        $this->currentStateId = $stateId;
-        $this->currentState = $this->getState($stateInstanceId, $stateId, $context);
+        try {
+            $stateData = $this->stateDataStorage->getRecent();
+            return $this->buildState(
+                $stateData->getId(), 
+                $stateData->getStateId(), 
+                $stateData->getStateContext()
+            );
+        } catch (Exception\StateDataNotFound $e) {
+            return $this->buildState(
+                null, 
+                $this->initialStateId, 
+                new Context()
+            );
+        }
     }
     
-    private function getState($stateInstanceId, $stateId, Context $context)
+    /**
+     * @return String
+     */
+    private function getCurrentStateId()
+    {
+        try {
+            return $this->stateDataStorage->getRecent()->getStateId();
+        } catch (Exception\StateDataNotFound $e) {
+            return $this->initialStateId;
+        }
+    }
+    
+    private function buildState($stateInstanceId, $stateId, Context $context)
     {
         $s = clone $this->statePrototypes[$stateId];
         $s->setContext($context);

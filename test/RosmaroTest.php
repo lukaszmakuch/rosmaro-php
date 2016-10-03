@@ -13,23 +13,21 @@ use lukaszmakuch\Rosmaro\Cmd\AddOneSymbol;
 use lukaszmakuch\Rosmaro\Cmd\PrependSymbols;
 use lukaszmakuch\Rosmaro\State\HashAppender;
 use lukaszmakuch\Rosmaro\State\SymbolPrepender;
-use lukaszmakuch\Rosmaro\StateDataStorages\InMemoryStateDataStorage;
 use lukaszmakuch\Rosmaro\StateVisitors\CallableBasedVisitor;
 use PHPUnit_Framework_TestCase;
 
 class RosmaroTest extends PHPUnit_Framework_TestCase
 {
-    /**
-     * @var Rosmaro
-     */
-    private $r;
     private $howManyHashesAppended = 0;
-    private $stateDataStorage;
+    
+    /**
+     * @var RosmaroStorage
+     */
+    private $rosmaroStorage;
     
     protected function setUp()
     {
-        $this->stateDataStorage = new InMemoryStateDataStorage();
-        $this->r = new Rosmaro(
+        $this->rosmaroStorage = new RosmaroStorage(
             "append_hash",
             [
                 "append_hash" => [
@@ -49,68 +47,109 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
                 "prepend_a" => new SymbolPrepender("a"),
                 "prepend_b" => new SymbolPrepender("b"),
             ],
-            $this->stateDataStorage
+            new StateDataStorages\InMemoryStateDataStorageRepo()
         );
     }
     
     public function testTransitions()
     {
-        $this->assertHashAppender($this->r, "");
-        $this->r->handle(new AddOneSymbol());
+        $r = $this->getRosmaro("a");
         
-        $this->assertSymbolPrepender($this->r, "#");
-        $this->r->handle(new PrependSymbols(1));
+        $this->assertHashAppender($r, "");
+        $r->handle(new AddOneSymbol());
         
-        $this->assertHashAppender($this->r, "a#");
-        $this->r->handle(new AddOneSymbol());
+        $this->assertSymbolPrepender($r, "#");
+        $r->handle(new PrependSymbols(1));
         
-        $this->assertSymbolPrepender($this->r, "a##");
-        $this->r->handle(new PrependSymbols(2));
+        $this->assertHashAppender($r, "a#");
+        $r->handle(new AddOneSymbol());
         
-        $this->assertSymbolPrepender($this->r, "aaa##");
-        $this->r->handle(new PrependSymbols(1));
+        $this->assertSymbolPrepender($r, "a##");
+        $r->handle(new PrependSymbols(2));
         
-        $this->assertSymbolPrepender($this->r, "baaa##");
-        $this->r->handle(new PrependSymbols(1));
+        $this->assertSymbolPrepender($r, "aaa##");
+        $r->handle(new PrependSymbols(1));
         
-        $this->assertSymbolPrepender($this->r, "bbaaa##");
+        $this->assertSymbolPrepender($r, "baaa##");
+        $r->handle(new PrependSymbols(1));
+        
+        $this->assertSymbolPrepender($r, "bbaaa##");
     }
     
     public function testRevertingToState()
     {
+        $r = $this->getRosmaro("a");
+        
         //HashAppender ""
-        $this->r->handle(new AddOneSymbol());
+        $r->handle(new AddOneSymbol());
         //SymbolPrepender "#"
-        $this->r->handle(new PrependSymbols(1));
+        $r->handle(new PrependSymbols(1));
         //HashAppender "a#"
-        $this->r->handle(new AddOneSymbol());
+        $r->handle(new AddOneSymbol());
         //SymbolPrepender "a##"
         
-        $allStates = $this->r->getAllStates();
+        $allStates = $r->getAllStates();
         $this->assertCount(4, $allStates);
         $this->assertHashAppender($allStates[0], "");
         $this->assertSymbolPrepender($allStates[1], "#");
         $this->assertHashAppender($allStates[2], "a#");
         $this->assertSymbolPrepender($allStates[3], "a##");
         
-        $this->r->revertTo($allStates[1]);
-        $this->r->handle(new PrependSymbols(2));
-        $this->assertSymbolPrepender($this->r, "aa#");
+        $r->revertTo($allStates[1]);
+        $r->handle(new PrependSymbols(2));
+        $this->assertSymbolPrepender($r, "aa#");
         
-        $this->r->revertTo($allStates[0]);
-        $this->assertHashAppender($this->r, "");
+        $r->revertTo($allStates[0]);
+        $this->assertHashAppender($r, "");
     }
 
     public function testCleanUp()
     {
-        $this->r->handle(new AddOneSymbol());
-        $this->r->handle(new PrependSymbols(1));
-        $this->r->handle(new AddOneSymbol());
+        $r = $this->getRosmaro("a");
+        
+        $r->handle(new AddOneSymbol());
+        $r->handle(new PrependSymbols(1));
+        $r->handle(new AddOneSymbol());
         
         $this->assertEquals(2, $this->howManyHashesAppended);
-        $this->r->cleanUp();
+        $r->cleanUp();
         $this->assertEquals(0, $this->howManyHashesAppended);
+    }
+    
+    public function testManyIndependentInstances()
+    {
+        $r1 = $this->getRosmaro("a");
+        $r2 = $this->getRosmaro("b");
         
+        $r1->handle(new AddOneSymbol());
+        $r1->handle(new PrependSymbols(1));
+        
+        $r2->handle(new AddOneSymbol());
+        $r2->handle(new PrependSymbols(2));
+        
+        $this->assertHashAppender($r1, "a#");
+        $this->assertSymbolPrepender($r2, "aa#");
+    }
+    
+    public function testOneRosmaroById()
+    {
+        $fetchedFirst = $this->getRosmaro("a");
+        $fetchedFirst->handle(new AddOneSymbol());
+        
+        $fetchedLater = $this->getRosmaro("a");
+        $fetchedLater->handle(new PrependSymbols(1));
+        
+        $this->assertHashAppender($fetchedFirst, "a#");
+        $this->assertHashAppender($fetchedLater, "a#");
+    }
+    
+    /**
+     * @param String $id
+     * @return Rosmaro
+     */
+    private function getRosmaro($id)
+    {
+        return $this->rosmaroStorage->getStoredOrNewBy($id);
     }
     
     private function assertHashAppender(State $s, $msg)
