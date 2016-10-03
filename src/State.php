@@ -23,4 +23,6 @@ interface State
     public function getId();
     
     public function accept(StateVisitor $v);
+    
+    public function cleanUp();
 }

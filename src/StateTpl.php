@@ -45,6 +45,10 @@ abstract class StateTpl implements State, ContextUser
         $v->visit($this);
     }
     
+    public function cleanUp()
+    {
+    }
+    
     protected abstract function getClassOfSupportedCommands();
     
     protected function throwExceptionIfInvalidContext()

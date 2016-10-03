@@ -11,6 +11,13 @@ namespace lukaszmakuch\Rosmaro\State;
 
 class HashAppender extends \lukaszmakuch\Rosmaro\StateTpl
 {
+    private $howManyAppended;
+    
+    public function __construct(&$count)
+    {
+        $this->howManyAppended = &$count;
+    }
+    
     /**
      * @return String
      */
@@ -28,9 +35,14 @@ class HashAppender extends \lukaszmakuch\Rosmaro\StateTpl
 
     protected function handleImpl($cmd)
     {
+        $this->howManyAppended++;
         return $this->causeTransition("appended", $this->context->getCopyWith([
             'msg' => $this->getBuiltMessage() . "#"
         ]));
     }
-
+    
+    public function cleanUp()
+    {
+        $this->howManyAppended--;
+    }
 }

@@ -28,4 +28,6 @@ interface StateDataStorage
      * @param String $stateDataId
      */
     public function revertTo($stateDataId);
+    
+    public function removeAllData();
 }

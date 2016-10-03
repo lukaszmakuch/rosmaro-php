@@ -34,6 +34,11 @@ class InMemoryStateDataStorage implements \lukaszmakuch\Rosmaro\StateDataStorage
 
     public function revertTo($stateDataId)
     {
+        if (is_null($stateDataId)) {
+            $this->removeAllData();
+            return;
+        }
+        
         $newStack = [];
         foreach ($this->stateDataById as $stateDataId => $oldStateData) {
             $newStack[$stateDataId] = $oldStateData;
@@ -45,4 +50,8 @@ class InMemoryStateDataStorage implements \lukaszmakuch\Rosmaro\StateDataStorage
         $this->stateDataById = $newStack;
     }
 
+    public function removeAllData()
+    {
+        $this->stateDataById = [];
+    }
 }

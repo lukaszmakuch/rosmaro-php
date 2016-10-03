@@ -23,9 +23,12 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
      * @var Rosmaro
      */
     private $r;
+    private $howManyHashesAppended = 0;
+    private $stateDataStorage;
     
     protected function setUp()
     {
+        $this->stateDataStorage = new InMemoryStateDataStorage();
         $this->r = new Rosmaro(
             "append_hash",
             [
@@ -42,11 +45,11 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
                 ],
             ],
             [
-                "append_hash" => new HashAppender(),
+                "append_hash" => new HashAppender($this->howManyHashesAppended),
                 "prepend_a" => new SymbolPrepender("a"),
                 "prepend_b" => new SymbolPrepender("b"),
             ],
-            new InMemoryStateDataStorage()
+            $this->stateDataStorage
         );
     }
     
@@ -93,6 +96,21 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->r->revertTo($allStates[1]);
         $this->r->handle(new PrependSymbols(2));
         $this->assertSymbolPrepender($this->r, "aa#");
+        
+        $this->r->revertTo($allStates[0]);
+        $this->assertHashAppender($this->r, "");
+    }
+
+    public function testCleanUp()
+    {
+        $this->r->handle(new AddOneSymbol());
+        $this->r->handle(new PrependSymbols(1));
+        $this->r->handle(new AddOneSymbol());
+        
+        $this->assertEquals(2, $this->howManyHashesAppended);
+        $this->r->cleanUp();
+        $this->assertEquals(0, $this->howManyHashesAppended);
+        
     }
     
     private function assertHashAppender(State $s, $msg)

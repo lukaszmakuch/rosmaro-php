@@ -22,7 +22,6 @@ class Rosmaro implements State
     private $statePrototypes;
     
     /**
-     * 
      * @param type $initialStateId
      * @param array $transtions
      * @param StateTpl[] $statePrototypes
@@ -41,9 +40,9 @@ class Rosmaro implements State
         
         try {
             $stateData = $stateDataStorage->getRecent();
-            $this->setCurrentState($stateData->getStateId(), $stateData->getStateContext());
+            $this->setCurrentState($stateData->getId(), $stateData->getStateId(), $stateData->getStateContext());
         } catch (Exception\StateDataNotFound $e) {
-            $this->setCurrentState($initialStateId, new Context());
+            $this->setCurrentState(null, $initialStateId, new Context());
         }
     }
 
@@ -56,12 +55,14 @@ class Rosmaro implements State
     {
         $maybeTransitionRequest = $this->currentState->handle($cmd);
         if (!is_null($maybeTransitionRequest)) {
+            $stateInstanceId = uniqid();
             $this->setCurrentState(
+                $stateInstanceId,
                 $this->transitions[$this->currentStateId][$maybeTransitionRequest->getEdge()],
                 $maybeTransitionRequest->getStateContext()
             );
             $this->stateDataStorage->store(new StateData(
-                uniqid(), 
+                $stateInstanceId, 
                 $this->currentStateId, 
                 $maybeTransitionRequest->getStateContext()
             ));
@@ -74,9 +75,10 @@ class Rosmaro implements State
     public function getAllStates()
     {
         return array_values(array_merge([
-            $this->getState($this->initialStateId, new Context())
+            $this->getState(null, $this->initialStateId, new Context())
         ], array_map(function (StateData $stateData) {
             $s = clone $this->statePrototypes[$stateData->getStateId()];
+            $s->setId($stateData->getId());
             $s->setContext($stateData->getStateContext());
             return $s;
         }, $this->stateDataStorage->getAll())));
@@ -84,21 +86,33 @@ class Rosmaro implements State
     
     public function revertTo(State $s)
     {
-        $this->stateDataStorage->revertTo($s->getId());
-        $stateData = $this->stateDataStorage->getRecent();
-        $this->setCurrentState($stateData->getStateId(), $stateData->getStateContext());
+        try {
+            $this->stateDataStorage->revertTo($s->getId());
+            $stateData = $this->stateDataStorage->getRecent();
+            $this->setCurrentState($stateData->getId(), $stateData->getStateId(), $stateData->getStateContext());
+        } catch (\lukaszmakuch\Rosmaro\Exception\StateDataNotFound $e) {
+            $this->setCurrentState(null, $this->initialStateId, new Context());
+        }
     }
     
-    private function setCurrentState($stateId, Context $context)
+    public function cleanUp()
+    {
+        foreach ($this->getAllStates() as $s) {
+            $s->cleanUp();
+        }
+    }
+    
+    private function setCurrentState($stateInstanceId, $stateId, Context $context)
     {
         $this->currentStateId = $stateId;
-        $this->currentState = $this->getState($stateId, $context);
+        $this->currentState = $this->getState($stateInstanceId, $stateId, $context);
     }
     
-    private function getState($stateId, Context $context)
+    private function getState($stateInstanceId, $stateId, Context $context)
     {
         $s = clone $this->statePrototypes[$stateId];
         $s->setContext($context);
+        $s->setId($stateInstanceId);
         return $s;
     }
 
