@@ -15,6 +15,17 @@ interface StateDataStorage
      * @return StateData
      * @throws Exception\StateDataNotFound
      */
-    public function get();
+    public function getRecent();
+    
+    /**
+     * @return StateDate[]
+     */
+    public function getAll();
+    
     public function store(StateData $stateData);
+    
+    /**
+     * @param String $stateDataId
+     */
+    public function revertTo($stateDataId);
 }

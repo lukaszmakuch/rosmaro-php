@@ -16,7 +16,7 @@ class Rosmaro implements State
      */
     private $currentState;
     private $currentStateId;
-    
+    private $initialStateId;
     private $stateDataStorage;
     private $transitions;
     private $statePrototypes;
@@ -37,9 +37,10 @@ class Rosmaro implements State
         $this->stateDataStorage = $stateDataStorage;
         $this->transitions = $transtions;
         $this->statePrototypes = $statePrototypes;
+        $this->initialStateId = $initialStateId;
         
         try {
-            $stateData = $stateDataStorage->get();
+            $stateData = $stateDataStorage->getRecent();
             $this->setCurrentState($stateData->getStateId(), $stateData->getStateContext());
         } catch (Exception\StateDataNotFound $e) {
             $this->setCurrentState($initialStateId, new Context());
@@ -60,17 +61,49 @@ class Rosmaro implements State
                 $maybeTransitionRequest->getStateContext()
             );
             $this->stateDataStorage->store(new StateData(
-                null, 
+                uniqid(), 
                 $this->currentStateId, 
                 $maybeTransitionRequest->getStateContext()
             ));
         }
     }
     
+    /**
+     * @return State[]
+     */
+    public function getAllStates()
+    {
+        return array_values(array_merge([
+            $this->getState($this->initialStateId, new Context())
+        ], array_map(function (StateData $stateData) {
+            $s = clone $this->statePrototypes[$stateData->getStateId()];
+            $s->setContext($stateData->getStateContext());
+            return $s;
+        }, $this->stateDataStorage->getAll())));
+    }
+    
+    public function revertTo(State $s)
+    {
+        $this->stateDataStorage->revertTo($s->getId());
+        $stateData = $this->stateDataStorage->getRecent();
+        $this->setCurrentState($stateData->getStateId(), $stateData->getStateContext());
+    }
+    
     private function setCurrentState($stateId, Context $context)
     {
         $this->currentStateId = $stateId;
-        $this->currentState = clone $this->statePrototypes[$stateId];
-        $this->currentState->setContext($context);
+        $this->currentState = $this->getState($stateId, $context);
+    }
+    
+    private function getState($stateId, Context $context)
+    {
+        $s = clone $this->statePrototypes[$stateId];
+        $s->setContext($context);
+        return $s;
+    }
+
+    public function getId()
+    {
+        return null;
     }
 }

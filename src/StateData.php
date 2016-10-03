@@ -25,7 +25,7 @@ class StateData
     /**
      * @return String
      */
-    public function getid()
+    public function getId()
     {
         return $this->id;
     }

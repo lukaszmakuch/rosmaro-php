@@ -11,19 +11,38 @@ namespace lukaszmakuch\Rosmaro\StateDataStorages;
 
 class InMemoryStateDataStorage implements \lukaszmakuch\Rosmaro\StateDataStorage
 {
-    private $stateData = null;
+    private $stateDataById = [];
     
-    public function get()
+    public function getRecent()
     {
-        if (is_null($this->stateData)) {
+        if (empty($this->stateDataById)) {
             throw new \lukaszmakuch\Rosmaro\Exception\StateDataNotFound();
         }
         
-        return $this->stateData;
+        return end($this->stateDataById);
     }
 
     public function store(\lukaszmakuch\Rosmaro\StateData $stateData)
     {
-        $this->stateData = $stateData;
+        $this->stateDataById[$stateData->getId()] = $stateData;
     }
+
+    public function getAll()
+    {
+        return $this->stateDataById;
+    }
+
+    public function revertTo($stateDataId)
+    {
+        $newStack = [];
+        foreach ($this->stateDataById as $stateDataId => $oldStateData) {
+            $newStack[$stateDataId] = $oldStateData;
+            if ($stateDataId == $stateDataId) {
+                break;
+            }
+        }
+        
+        $this->stateDataById = $newStack;
+    }
+
 }

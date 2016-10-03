@@ -17,5 +17,10 @@ interface State
      */
     public function handle($cmd);
     
+    /**
+     * @return String|null
+     */
+    public function getId();
+    
     public function accept(StateVisitor $v);
 }

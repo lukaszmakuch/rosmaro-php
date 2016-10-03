@@ -16,6 +16,8 @@ abstract class StateTpl implements State, ContextUser
      */
     protected $context;
     
+    private $id;
+    
     public function handle($cmd)
     {
         $this->throwExceptionIfInvalidContext();
@@ -26,6 +28,16 @@ abstract class StateTpl implements State, ContextUser
     public function setContext(Context $c)
     {
         $this->context = $c;
+    }
+    
+    public function getId()
+    {
+        return $this->id;
+    }
+    
+    public function setId($id)
+    {
+        $this->id = $id;
     }
     
     public function accept(StateVisitor $v)
