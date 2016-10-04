@@ -149,38 +149,44 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
     
     public function testReadingGraph()
     {
-        $appendHashNode = $this->getRosmaro("a")->getGraph();
-        $this->assertEquals("append_hash", $appendHashNode->getAttr("id"));
-        $arrowsFromAppendHashNode = $appendHashNode->getArrowsFromIt();
+        $r = $this->getRosmaro("a");
+        $r->handle(new AddOneSymbol());
+        
+        $appendHashNode = $r->getGraph();
+        $this->assertEquals("append_hash", $appendHashNode->id);
+        $this->assertFalse($appendHashNode->isCurrent);
+        $arrowsFromAppendHashNode = $appendHashNode->arrowsFromIt;
         $this->assertCount(1, $arrowsFromAppendHashNode);
         $appendedArrowFromAppendHashNode = $arrowsFromAppendHashNode[0];
-        $this->assertEquals("appended", $appendedArrowFromAppendHashNode->getAttr("id"));
-        $this->assertSame($appendHashNode, $appendedArrowFromAppendHashNode->getHead());
+        $this->assertEquals("appended", $appendedArrowFromAppendHashNode->id);
+        $this->assertSame($appendHashNode, $appendedArrowFromAppendHashNode->head);
         
-        $prependANode = $appendedArrowFromAppendHashNode->getTail();
-        $this->assertEquals("prepend_a", $prependANode->getAttr("id"));
-        $arrowsFromPrependANode = $prependANode->getArrowsFromIt();
+        $prependANode = $appendedArrowFromAppendHashNode->tail;
+        $this->assertEquals("prepend_a", $prependANode->id);
+        $this->assertTrue($prependANode->isCurrent);
+        $arrowsFromPrependANode = $prependANode->arrowsFromIt;
         $this->assertCount(2, $arrowsFromPrependANode);
         $moreThan1ArrowFromPrependA = $arrowsFromPrependANode[0];
-        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependA->getAttr("id"));
-        $this->assertSame($prependANode, $moreThan1ArrowFromPrependA->getHead());
+        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependA->id);
+        $this->assertSame($prependANode, $moreThan1ArrowFromPrependA->head);
         $lessThan2ArrowFromPrependA = $arrowsFromPrependANode[1];
-        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependA->getAttr("id"));
-        $this->assertSame($prependANode, $lessThan2ArrowFromPrependA->getHead());
-        $this->assertSame($appendHashNode, $lessThan2ArrowFromPrependA->getTail());
+        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependA->id);
+        $this->assertSame($prependANode, $lessThan2ArrowFromPrependA->head);
+        $this->assertSame($appendHashNode, $lessThan2ArrowFromPrependA->tail);
         
-        $prependBNode = $moreThan1ArrowFromPrependA->getTail();
-        $this->assertEquals("prepend_b", $prependBNode->getAttr("id"));
-        $arrowsFromPrependBNode = $prependBNode->getArrowsFromIt();
+        $prependBNode = $moreThan1ArrowFromPrependA->tail;
+        $this->assertEquals("prepend_b", $prependBNode->id);
+        $this->assertFalse($prependBNode->isCurrent);
+        $arrowsFromPrependBNode = $prependBNode->arrowsFromIt;
         $this->assertCount(2, $arrowsFromPrependBNode);
         $moreThan1ArrowFromPrependB = $arrowsFromPrependBNode[0];
-        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependB->getAttr("id"));
-        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->getHead());
-        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->getTail());
+        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependB->id);
+        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->head);
+        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->tail);
         $lessThan2ArrowFromPrependB = $arrowsFromPrependBNode[1];
-        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependB->getAttr("id"));
-        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->getHead());
-        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->getTail());
+        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependB->id);
+        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->head);
+        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->tail);
     }
     
     /**

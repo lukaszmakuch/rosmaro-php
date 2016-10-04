@@ -9,16 +9,21 @@
 
 namespace lukaszmakuch\Rosmaro\Graph;
 
-class Node extends AttributeBag
+class Node
 {
+    /**
+     * @var Arrow[] 
+     */
     public $arrowsFromIt = [];
     
     /**
-     * @return Arrow[]
+     * @var boolean
      */
-    public function getArrowsFromIt()
-    {
-        return $this->arrowsFromIt;
-    }
+    public $isCurrent = false;
+
+    /**
+     * @var String
+     */
+    public $id = "";
 }
 

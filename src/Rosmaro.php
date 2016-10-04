@@ -36,6 +36,7 @@ class Rosmaro implements State
      */
     public function getGraph()
     {
+        $currentNodeId = $this->getCurrentStateId();
         //create all nodes
         $nodeById = [];
         $idsOfNodes = array_unique(array_merge(
@@ -44,14 +45,15 @@ class Rosmaro implements State
         );
         foreach ($idsOfNodes as $nodeId) {
             $nodeById[$nodeId] = new Graph\Node();
-            $nodeById[$nodeId]->setAttr("id", $nodeId);
+            $nodeById[$nodeId]->id = $nodeId;
+            $nodeById[$nodeId]->isCurrent = ($nodeId == $currentNodeId);
         }
         
         //add arrows
         foreach ($this->transitions as $headNodeId => $arrowsData) {
             foreach ($arrowsData as $arrowId => $tailNodeId) {
                 $arrow = new Graph\Arrow();
-                $arrow->setAttr("id", $arrowId);
+                $arrow->id = $arrowId;
                 $arrow->head = $nodeById[$headNodeId];
                 $arrow->tail = $nodeById[$tailNodeId];
                 $nodeById[$headNodeId]->arrowsFromIt[] = $arrow;

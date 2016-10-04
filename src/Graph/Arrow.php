@@ -9,25 +9,21 @@
 
 namespace lukaszmakuch\Rosmaro\Graph;
 
-class Arrow extends AttributeBag
+class Arrow
 {
+    /**
+     * @var Node 
+     */
     public $head;
+    
+    /**
+     * @var Node 
+     */
     public $tail;
     
     /**
-     * @return Node
+     * @var String
      */
-    public function getHead()
-    {
-        return $this->head;
-    }
-    
-    /**
-     * @return Node
-     */
-    public function getTail()
-    {
-        return $this->tail;
-    }
+    public $id = "";
 }
 
