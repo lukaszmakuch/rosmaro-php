@@ -19,11 +19,36 @@ use PHPUnit_Framework_TestCase;
 class RosmaroTest extends PHPUnit_Framework_TestCase
 {
     private $howManyHashesAppended = 0;
-
+    private $rosmaroFactory;
     private $stateDataStorage;
     
     protected function setUp()
     {
+        $this->rosmaroFactory = function ($rosmaroId) {
+            return new Rosmaro(
+                $rosmaroId,
+                "append_hash",
+                [
+                    "append_hash" => [
+                        "appended" => "prepend_a", 
+                    ],
+                    "prepend_a" => [
+                        "prepended_more_than_1" => "prepend_b",
+                        "prepended_less_than_2" => "append_hash",
+                    ],
+                    "prepend_b" => [
+                        "prepended_more_than_1" => "prepend_b",
+                        "prepended_less_than_2" => "prepend_b",
+                    ],
+                ],
+                [
+                    "append_hash" => new HashAppender($this->howManyHashesAppended),
+                    "prepend_a" => new SymbolPrepender("a"),
+                    "prepend_b" => new SymbolPrepender("b"),
+                ],
+                $this->stateDataStorage
+            );
+        };
         $this->stateDataStorage = new StateDataStorages\InMemoryStateDataStorage();
     }
 
@@ -128,29 +153,8 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
      */
     private function getRosmaro($id)
     {
-        return new Rosmaro(
-            $id,
-            "append_hash",
-            [
-                "append_hash" => [
-                    "appended" => "prepend_a", 
-                ],
-                "prepend_a" => [
-                    "prepended_more_than_1" => "prepend_b",
-                    "prepended_less_than_2" => "append_hash",
-                ],
-                "prepend_b" => [
-                    "prepended_more_than_1" => "prepend_b",
-                    "prepended_less_than_2" => "prepend_b",
-                ],
-            ],
-            [
-                "append_hash" => new HashAppender($this->howManyHashesAppended),
-                "prepend_a" => new SymbolPrepender("a"),
-                "prepend_b" => new SymbolPrepender("b"),
-            ],
-            $this->stateDataStorage
-        );
+        $f = $this->rosmaroFactory;
+        return $f($id);
     }
     
     private function assertHashAppender(State $s, $msg)
