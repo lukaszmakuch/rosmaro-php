@@ -9,7 +9,7 @@
 
 namespace lukaszmakuch\Rosmaro;
 
-abstract class StateTpl implements State, ContextUser
+abstract class StateTpl implements State
 {
     /**
      * @var Context
