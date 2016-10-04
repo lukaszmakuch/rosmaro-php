@@ -18,7 +18,6 @@ class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
         $this->symbol = $symbol;
     }
     
-    
     /**
      * @return String
      */

@@ -30,6 +30,39 @@ class Rosmaro implements State
         $this->statePrototypes = $statePrototypes;
         $this->initialStateId = $initialStateId;
     }
+    
+    /**
+     * @return Graph\Node
+     */
+    public function getGraph()
+    {
+        //create all nodes
+        $nodeById = [];
+        $idsOfNodes = array_unique(array_merge(
+            [$this->initialStateId], 
+            array_keys($this->transitions))
+        );
+        foreach ($idsOfNodes as $nodeId) {
+            $nodeById[$nodeId] = new Graph\Node();
+            $nodeById[$nodeId]->setAttr("id", $nodeId);
+        }
+        
+        //add arrows
+        foreach ($this->transitions as $headNodeId => $arrowsData) {
+            foreach ($arrowsData as $arrowId => $tailNodeId) {
+                $arrow = new Graph\Arrow();
+                $arrow->setAttr("id", $arrowId);
+                $arrow->head = $nodeById[$headNodeId];
+                $arrow->tail = $nodeById[$tailNodeId];
+                $nodeById[$headNodeId]->arrowsFromIt[] = $arrow;
+            }
+        }
+        
+        //return the root node
+        return $nodeById[$this->initialStateId];
+    }
+    
+
 
     public function accept(StateVisitor $v)
     {

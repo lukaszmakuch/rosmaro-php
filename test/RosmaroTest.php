@@ -147,6 +147,42 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->assertHashAppender($fetchedLater, "a#");
     }
     
+    public function testReadingGraph()
+    {
+        $appendHashNode = $this->getRosmaro("a")->getGraph();
+        $this->assertEquals("append_hash", $appendHashNode->getAttr("id"));
+        $arrowsFromAppendHashNode = $appendHashNode->getArrowsFromIt();
+        $this->assertCount(1, $arrowsFromAppendHashNode);
+        $appendedArrowFromAppendHashNode = $arrowsFromAppendHashNode[0];
+        $this->assertEquals("appended", $appendedArrowFromAppendHashNode->getAttr("id"));
+        $this->assertSame($appendHashNode, $appendedArrowFromAppendHashNode->getHead());
+        
+        $prependANode = $appendedArrowFromAppendHashNode->getTail();
+        $this->assertEquals("prepend_a", $prependANode->getAttr("id"));
+        $arrowsFromPrependANode = $prependANode->getArrowsFromIt();
+        $this->assertCount(2, $arrowsFromPrependANode);
+        $moreThan1ArrowFromPrependA = $arrowsFromPrependANode[0];
+        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependA->getAttr("id"));
+        $this->assertSame($prependANode, $moreThan1ArrowFromPrependA->getHead());
+        $lessThan2ArrowFromPrependA = $arrowsFromPrependANode[1];
+        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependA->getAttr("id"));
+        $this->assertSame($prependANode, $lessThan2ArrowFromPrependA->getHead());
+        $this->assertSame($appendHashNode, $lessThan2ArrowFromPrependA->getTail());
+        
+        $prependBNode = $moreThan1ArrowFromPrependA->getTail();
+        $this->assertEquals("prepend_b", $prependBNode->getAttr("id"));
+        $arrowsFromPrependBNode = $prependBNode->getArrowsFromIt();
+        $this->assertCount(2, $arrowsFromPrependBNode);
+        $moreThan1ArrowFromPrependB = $arrowsFromPrependBNode[0];
+        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependB->getAttr("id"));
+        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->getHead());
+        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->getTail());
+        $lessThan2ArrowFromPrependB = $arrowsFromPrependBNode[1];
+        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependB->getAttr("id"));
+        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->getHead());
+        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->getTail());
+    }
+    
     /**
      * @param String $id
      * @return Rosmaro
