@@ -153,40 +153,52 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $r->handle(new AddOneSymbol());
         
         $appendHashNode = $r->getGraph();
-        $this->assertEquals("append_hash", $appendHashNode->id);
-        $this->assertFalse($appendHashNode->isCurrent);
-        $arrowsFromAppendHashNode = $appendHashNode->arrowsFromIt;
-        $this->assertCount(1, $arrowsFromAppendHashNode);
-        $appendedArrowFromAppendHashNode = $arrowsFromAppendHashNode[0];
-        $this->assertEquals("appended", $appendedArrowFromAppendHashNode->id);
-        $this->assertSame($appendHashNode, $appendedArrowFromAppendHashNode->head);
         
-        $prependANode = $appendedArrowFromAppendHashNode->tail;
-        $this->assertEquals("prepend_a", $prependANode->id);
-        $this->assertTrue($prependANode->isCurrent);
-        $arrowsFromPrependANode = $prependANode->arrowsFromIt;
-        $this->assertCount(2, $arrowsFromPrependANode);
-        $moreThan1ArrowFromPrependA = $arrowsFromPrependANode[0];
-        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependA->id);
-        $this->assertSame($prependANode, $moreThan1ArrowFromPrependA->head);
-        $lessThan2ArrowFromPrependA = $arrowsFromPrependANode[1];
-        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependA->id);
-        $this->assertSame($prependANode, $lessThan2ArrowFromPrependA->head);
-        $this->assertSame($appendHashNode, $lessThan2ArrowFromPrependA->tail);
+        //expected nodes
+        $expectedAppendHash = new Graph\Node();
+        $expectedAppendHash->id = "append_hash";
         
-        $prependBNode = $moreThan1ArrowFromPrependA->tail;
-        $this->assertEquals("prepend_b", $prependBNode->id);
-        $this->assertFalse($prependBNode->isCurrent);
-        $arrowsFromPrependBNode = $prependBNode->arrowsFromIt;
-        $this->assertCount(2, $arrowsFromPrependBNode);
-        $moreThan1ArrowFromPrependB = $arrowsFromPrependBNode[0];
-        $this->assertEquals("prepended_more_than_1", $moreThan1ArrowFromPrependB->id);
-        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->head);
-        $this->assertSame($prependBNode, $moreThan1ArrowFromPrependB->tail);
-        $lessThan2ArrowFromPrependB = $arrowsFromPrependBNode[1];
-        $this->assertEquals("prepended_less_than_2", $lessThan2ArrowFromPrependB->id);
-        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->head);
-        $this->assertSame($prependBNode, $lessThan2ArrowFromPrependB->tail);
+        $expectedPrependA = new Graph\Node();
+        $expectedPrependA->id = "prepend_a";
+        $expectedPrependA->isCurrent = true;
+        
+        $expectedPrependB = new Graph\Node();
+        $expectedPrependB->id = "prepend_b";
+        
+        //expected arrows
+        $expectedAppendHashToPrependA = new Graph\Arrow();
+        $expectedAppendHashToPrependA->id = "appended";
+        $expectedAppendHashToPrependA->head = $appendHashNode;
+        $expectedAppendHashToPrependA->tail = $expectedPrependA;
+        
+        $expectedPrependAToPrependB = new Graph\Arrow();
+        $expectedPrependAToPrependB->id = "prepended_more_than_1";
+        $expectedPrependAToPrependB->head = $expectedPrependA;
+        $expectedPrependAToPrependB->tail = $expectedPrependB;
+        
+        $expectedPrependAToAppendHash = new Graph\Arrow();
+        $expectedPrependAToAppendHash->id = "prepended_less_than_2";
+        $expectedPrependAToAppendHash->head = $expectedPrependA;
+        $expectedPrependAToAppendHash->tail = $expectedAppendHash;
+        
+        $expectedPrependBToPrependB1 = new Graph\Arrow();
+        $expectedPrependBToPrependB1->id = "prepended_more_than_1";
+        $expectedPrependBToPrependB1->head = $expectedPrependB;
+        $expectedPrependBToPrependB1->tail = $expectedPrependB;
+        
+        $expectedPrependBToPrependB2 = new Graph\Arrow();
+        $expectedPrependBToPrependB2->id = "prepended_less_than_2";
+        $expectedPrependBToPrependB2->head = $expectedPrependB;
+        $expectedPrependBToPrependB2->tail = $expectedPrependB;
+        
+        //connecting nodes with arrows
+        $expectedAppendHash->arrowsFromIt[] = $expectedAppendHashToPrependA;
+        $expectedPrependA->arrowsFromIt[] = $expectedPrependAToPrependB;
+        $expectedPrependA->arrowsFromIt[] = $expectedPrependAToAppendHash;
+        $expectedPrependB->arrowsFromIt[] = $expectedPrependBToPrependB1;
+        $expectedPrependB->arrowsFromIt[] = $expectedPrependBToPrependB2;
+        
+        $this->assertEquals($expectedAppendHash, $appendHashNode);
     }
     
     /**
