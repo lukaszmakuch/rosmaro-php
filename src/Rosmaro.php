@@ -94,6 +94,12 @@ class Rosmaro implements State
         }
     }
     
+    public function remove()
+    {
+        $this->cleanUp();
+        $this->stateDataStorage->removeAllDataFor($this->id);
+    }
+    
     /**
      * @return State
      */
