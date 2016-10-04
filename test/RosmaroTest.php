@@ -94,13 +94,16 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->assertSymbolPrepender($allStates[1], "#");
         $this->assertHashAppender($allStates[2], "a#");
         $this->assertSymbolPrepender($allStates[3], "a##");
+        $this->assertEquals(2, $this->howManyHashesAppended);
         
         $r->revertTo($allStates[1]);
         $r->handle(new PrependSymbols(2));
         $this->assertSymbolPrepender($r, "aa#");
+        $this->assertEquals(1, $this->howManyHashesAppended);
         
         $r->revertTo($allStates[0]);
         $this->assertHashAppender($r, "");
+        $this->assertEquals(0, $this->howManyHashesAppended);
     }
 
     public function testCleanUp()

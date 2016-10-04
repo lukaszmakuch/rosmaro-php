@@ -68,7 +68,21 @@ class Rosmaro implements State
     
     public function revertTo(State $s)
     {
+        $abandonedStates = [];
+        $isAbandoned = false;
+        foreach ($this->getAllStates() as $possiblyAbandoned) {
+            if ($possiblyAbandoned->getId() == $s->getId()) {
+                $isAbandoned = true;
+            }
+            if ($isAbandoned) {
+                $abandonedStates[] = $possiblyAbandoned;
+            }
+        }
+        
         $this->stateDataStorage->revertTo($s->getId());
+        foreach ($abandonedStates as $toClean) {
+            $toClean->cleanUp();
+        }
     }
     
     public function cleanUp()
