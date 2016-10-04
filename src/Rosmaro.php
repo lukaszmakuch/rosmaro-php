@@ -42,8 +42,8 @@ class Rosmaro implements State
         if (!is_null($maybeTransitionRequest)) {
             $this->stateDataStorage->storeFor($this->id, new StateData(
                 uniqid(), 
-                $this->transitions[$this->getCurrentStateId()][$maybeTransitionRequest->getEdge()], 
-                $maybeTransitionRequest->getStateContext()
+                $this->transitions[$this->getCurrentStateId()][$maybeTransitionRequest->edge], 
+                $maybeTransitionRequest->context
             ));
         }
     }

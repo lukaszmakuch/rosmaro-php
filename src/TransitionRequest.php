@@ -11,28 +11,19 @@ namespace lukaszmakuch\Rosmaro;
 
 class TransitionRequest
 {
-    private $edge;
-    private $context;
+    /**
+     * @var String
+     */
+    public $edge;
+    
+    /**
+     * @var Context
+     */
+    public $context;
     
     public function __construct($edge, Context $context)
     {
         $this->edge = $edge;
         $this->context = $context;
-    }
-    
-    /**
-     * @return String
-     */
-    public function getEdge()
-    {
-        return $this->edge;
-    }
-    
-    /**
-     * @return Context
-     */
-    public function getStateContext()
-    {
-        return $this->context;
     }
 }
