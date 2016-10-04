@@ -9,49 +9,54 @@
 
 namespace lukaszmakuch\Rosmaro\StateDataStorages;
 
-class InMemoryStateDataStorage implements \lukaszmakuch\Rosmaro\StateDataStorage
+use lukaszmakuch\Rosmaro\Exception\StateDataNotFound;
+use lukaszmakuch\Rosmaro\StateData;
+use lukaszmakuch\Rosmaro\StateDataStorage;
+
+class InMemoryStateDataStorage implements StateDataStorage
 {
-    private $stateDataById = [];
+    private $stateDataStackByRosmaroId = [];
     
-    public function getRecent()
+    public function getAllFor($rosmaroId)
     {
-        if (empty($this->stateDataById)) {
-            throw new \lukaszmakuch\Rosmaro\Exception\StateDataNotFound();
+        return isset($this->stateDataStackByRosmaroId[$rosmaroId])
+            ? $this->stateDataStackByRosmaroId[$rosmaroId]
+            : [];
+    }
+
+    public function getRecentFor($rosmaroId)
+    {
+        if (!isset($this->stateDataStackByRosmaroId[$rosmaroId])) {
+            throw new StateDataNotFound();
         }
         
-        return end($this->stateDataById);
+        return end($this->stateDataStackByRosmaroId[$rosmaroId]);
     }
 
-    public function store(\lukaszmakuch\Rosmaro\StateData $stateData)
+    public function removeAllDataFor($rosmaroId)
     {
-        $this->stateDataById[$stateData->getId()] = $stateData;
+        unset($this->stateDataStackByRosmaroId[$rosmaroId]);
     }
 
-    public function getAll()
+    public function revertFor($rosmaroId, $stateDataId)
     {
-        return $this->stateDataById;
-    }
-
-    public function revertTo($stateDataId)
-    {
-        if (is_null($stateDataId)) {
-            $this->removeAllData();
-            return;
-        }
-        
         $newStack = [];
-        foreach ($this->stateDataById as $stateDataId => $oldStateData) {
-            $newStack[$stateDataId] = $oldStateData;
-            if ($stateDataId == $stateDataId) {
+        foreach ($this->getAllFor($rosmaroId) as $stateDataFromOldStack) {
+            $newStack[] = $stateDataFromOldStack;
+            if ($stateDataFromOldStack->getId() == $stateDataId) {
+                $this->stateDataStackByRosmaroId[$rosmaroId] = $newStack;
                 break;
             }
         }
-        
-        $this->stateDataById = $newStack;
     }
 
-    public function removeAllData()
+    public function storeFor($rosmaroId, StateData $stateData)
     {
-        $this->stateDataById = [];
+        if (!isset($this->stateDataStackByRosmaroId[$rosmaroId])) {
+            $this->stateDataStackByRosmaroId[$rosmaroId] = [];
+        }
+        
+        $this->stateDataStackByRosmaroId[$rosmaroId][] = $stateData;
     }
+
 }

@@ -11,23 +11,20 @@ namespace lukaszmakuch\Rosmaro;
 
 class Rosmaro implements State
 {
+    private $id;
     private $initialStateId;
     private $stateDataStorage;
     private $transitions;
     private $statePrototypes;
     
-    /**
-     * @param type $initialStateId
-     * @param array $transtions
-     * @param StateTpl[] $statePrototypes
-     * @param \lukaszmakuch\Rosmaro\StateDataStorage $stateDataStorage
-     */
     public function __construct(
+        $id,
         $initialStateId,
         array $transtions,
         array $statePrototypes,
         \lukaszmakuch\Rosmaro\StateDataStorage $stateDataStorage
     ) {
+        $this->id = $id;
         $this->stateDataStorage = $stateDataStorage;
         $this->transitions = $transtions;
         $this->statePrototypes = $statePrototypes;
@@ -43,7 +40,7 @@ class Rosmaro implements State
     {
         $maybeTransitionRequest = $this->getCurrentState()->handle($cmd);
         if (!is_null($maybeTransitionRequest)) {
-            $this->stateDataStorage->store(new StateData(
+            $this->stateDataStorage->storeFor($this->id, new StateData(
                 uniqid(), 
                 $this->transitions[$this->getCurrentStateId()][$maybeTransitionRequest->getEdge()], 
                 $maybeTransitionRequest->getStateContext()
@@ -63,7 +60,7 @@ class Rosmaro implements State
             $s->setId($stateData->getId());
             $s->setContext($stateData->getStateContext());
             return $s;
-        }, $this->stateDataStorage->getAll())));
+        }, $this->stateDataStorage->getAllFor($this->id))));
     }
     
     public function revertTo(State $s)
@@ -79,7 +76,12 @@ class Rosmaro implements State
             }
         }
         
-        $this->stateDataStorage->revertTo($s->getId());
+        if (is_null($s->getId())) {
+            $this->stateDataStorage->removeAllDataFor($this->id);
+        } else {
+            $this->stateDataStorage->revertFor($this->id, $s->getId());
+        }
+        
         foreach ($abandonedStates as $toClean) {
             $toClean->cleanUp();
         }
@@ -98,7 +100,7 @@ class Rosmaro implements State
     private function getCurrentState()
     {
         try {
-            $stateData = $this->stateDataStorage->getRecent();
+            $stateData = $this->stateDataStorage->getRecentFor($this->id);
             return $this->buildState(
                 $stateData->getId(), 
                 $stateData->getStateId(), 
@@ -119,7 +121,7 @@ class Rosmaro implements State
     private function getCurrentStateId()
     {
         try {
-            return $this->stateDataStorage->getRecent()->getStateId();
+            return $this->stateDataStorage->getRecentFor($this->id)->getStateId();
         } catch (Exception\StateDataNotFound $e) {
             return $this->initialStateId;
         }

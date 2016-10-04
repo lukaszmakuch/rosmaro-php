@@ -47,7 +47,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
                 "prepend_a" => new SymbolPrepender("a"),
                 "prepend_b" => new SymbolPrepender("b"),
             ],
-            new StateDataStorages\InMemoryStateDataStorageRepo()
+            new StateDataStorages\InMemoryStateDataStorage()
         );
     }
     

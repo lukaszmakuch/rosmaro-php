@@ -15,19 +15,19 @@ interface StateDataStorage
      * @return StateData
      * @throws Exception\StateDataNotFound
      */
-    public function getRecent();
+    public function getRecentFor($rosmaroId);
     
     /**
-     * @return StateDate[]
+     * @return StateData[]
      */
-    public function getAll();
+    public function getAllFor($rosmaroId);
     
-    public function store(StateData $stateData);
+    public function storeFor($rosmaroId, StateData $stateData);
     
     /**
      * @param String $stateDataId
      */
-    public function revertTo($stateDataId);
+    public function revertFor($rosmaroId, $stateDataId);
     
-    public function removeAllData();
+    public function removeAllDataFor($rosmaroId);
 }
