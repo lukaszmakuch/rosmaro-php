@@ -43,7 +43,7 @@ class InMemoryStateDataStorage implements StateDataStorage
         $newStack = [];
         foreach ($this->getAllFor($rosmaroId) as $stateDataFromOldStack) {
             $newStack[] = $stateDataFromOldStack;
-            if ($stateDataFromOldStack->getId() == $stateDataId) {
+            if ($stateDataFromOldStack->id == $stateDataId) {
                 $this->stateDataStackByRosmaroId[$rosmaroId] = $newStack;
                 break;
             }

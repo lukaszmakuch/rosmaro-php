@@ -56,9 +56,9 @@ class Rosmaro implements State
         return array_values(array_merge([
             $this->buildState(null, $this->initialStateId, new Context())
         ], array_map(function (StateData $stateData) {
-            $s = clone $this->statePrototypes[$stateData->getStateId()];
-            $s->setId($stateData->getId());
-            $s->setContext($stateData->getStateContext());
+            $s = clone $this->statePrototypes[$stateData->stateId];
+            $s->setId($stateData->id);
+            $s->setContext($stateData->context);
             return $s;
         }, $this->stateDataStorage->getAllFor($this->id))));
     }
@@ -108,9 +108,9 @@ class Rosmaro implements State
         try {
             $stateData = $this->stateDataStorage->getRecentFor($this->id);
             return $this->buildState(
-                $stateData->getId(), 
-                $stateData->getStateId(), 
-                $stateData->getStateContext()
+                $stateData->id, 
+                $stateData->stateId, 
+                $stateData->context
             );
         } catch (Exception\StateDataNotFound $e) {
             return $this->buildState(
@@ -127,7 +127,7 @@ class Rosmaro implements State
     private function getCurrentStateId()
     {
         try {
-            return $this->stateDataStorage->getRecentFor($this->id)->getStateId();
+            return $this->stateDataStorage->getRecentFor($this->id)->stateId;
         } catch (Exception\StateDataNotFound $e) {
             return $this->initialStateId;
         }

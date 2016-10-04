@@ -11,38 +11,14 @@ namespace lukaszmakuch\Rosmaro;
 
 class StateData
 {
-    private $id;
-    private $stateId;
-    private $context;
+    public $id;
+    public $stateId;
+    public $context;
     
     public function __construct($id, $stateId, $context)
     {
         $this->id = $id;
         $this->stateId = $stateId;
         $this->context = $context;
-    }
-    
-    /**
-     * @return String
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-    
-    /**
-     * @return String
-     */
-    public function getStateId()
-    {
-        return $this->stateId;
-    }
-    
-    /**
-     * @return Context
-     */
-    public function getStateContext()
-    {
-        return $this->context;
     }
 }
