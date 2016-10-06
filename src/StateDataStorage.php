@@ -9,11 +9,13 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Exception\StateDataNotFound;
+
 interface StateDataStorage
 {
     /**
      * @return StateData
-     * @throws Exception\StateDataNotFound
+     * @throws StateDataNotFound
      */
     public function getRecentFor($rosmaroId);
     
