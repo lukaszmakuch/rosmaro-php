@@ -9,6 +9,8 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Request\TransitionRequest;
+
 abstract class StateTpl implements State
 {
     /**

@@ -24,7 +24,7 @@ class PathPresenter
     
     /**
      * @param Rosmaro $r
-     * @return FlatNode[]
+     * @return PathNode[]
      */
     public function getNodesOf(Rosmaro $r)
     {
@@ -32,7 +32,7 @@ class PathPresenter
         /* @var $currentState State */
         $currentState = end($allStates);
         $visitedNodes = array_map(function (State $s) {
-            return new FlatNode($s->getId(), true, false);
+            return new PathNode($s->getId(), true, false);
         }, array_slice($allStates, 0, -1));
             
         $currentGraphNode = $r->getGraph()->getSuccessorOrItselfWith($currentState->getId());
@@ -41,11 +41,11 @@ class PathPresenter
     
     /**
      * @param Node $node
-     * @return FlatNode[]
+     * @return PathNode[]
      */
     private function getPreferredPathFrom(Node $node, $isCurrentNode)
     {
-        $nodeAsFlatNode = new FlatNode($node->id, $isCurrentNode, $isCurrentNode);
+        $nodeAsFlatNode = new PathNode($node->id, $isCurrentNode, $isCurrentNode);
         if (empty($node->arrowsFromIt)) {
             return [$nodeAsFlatNode];
         }

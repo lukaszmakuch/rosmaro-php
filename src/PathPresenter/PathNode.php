@@ -9,7 +9,7 @@
 
 namespace lukaszmakuch\Rosmaro\PathPresenter;
 
-class FlatNode
+class PathNode
 {
     /**
      * @var boolean

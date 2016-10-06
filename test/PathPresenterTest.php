@@ -11,7 +11,7 @@ namespace lukaszmakuch\Rosmaro;
 
 use lukaszmakuch\Rosmaro\Graph\Arrow;
 use lukaszmakuch\Rosmaro\Graph\Node;
-use lukaszmakuch\Rosmaro\PathPresenter\FlatNode;
+use lukaszmakuch\Rosmaro\PathPresenter\PathNode;
 use lukaszmakuch\Rosmaro\PathPresenter\PathPresenter;
 use lukaszmakuch\Rosmaro\State\SymbolPrepender;
 use PHPUnit_Framework_TestCase;
@@ -37,23 +37,23 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
             );
         };
         $this->assertFlatRepresentation([
-            new FlatNode("a", true, false),
-            new FlatNode("b", true, false),
-            new FlatNode("a", true, true),
-            new FlatNode("b", false, false),
-            new FlatNode("c", false, false),
+            new PathNode("a", true, false),
+            new PathNode("b", true, false),
+            new PathNode("a", true, true),
+            new PathNode("b", false, false),
+            new PathNode("c", false, false),
         ], [], $getRosmaroWithVisited(["a", "b", "a"]));
         
         $this->assertFlatRepresentation([
-            new FlatNode("a", true, false),
-            new FlatNode("d", true, true),
-            new FlatNode("e", false, false),
+            new PathNode("a", true, false),
+            new PathNode("d", true, true),
+            new PathNode("e", false, false),
         ], [], $getRosmaroWithVisited(["a", "d"]));
         
         $this->assertFlatRepresentation([
-            new FlatNode("a", true, true),
-            new FlatNode("d", false, false),
-            new FlatNode("f", false, false),
+            new PathNode("a", true, true),
+            new PathNode("d", false, false),
+            new PathNode("f", false, false),
         ], ["a" => "a-d", "d" => "d-f"], $getRosmaroWithVisited(["a"]));
     }
     
