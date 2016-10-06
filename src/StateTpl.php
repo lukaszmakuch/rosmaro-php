@@ -73,11 +73,6 @@ abstract class StateTpl implements State
         
     }
     
-    protected function causeTransition($transitionEdge, Context $nextStateConext)
-    {
-        return new TransitionRequest($transitionEdge, $nextStateConext);
-    }
-    
     /**
      * @throws Exception\UnableToHandleCmd
      * @return TransitionRequest|null

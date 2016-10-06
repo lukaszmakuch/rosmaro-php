@@ -73,13 +73,19 @@ class Rosmaro implements State
 
     public function handle($cmd)
     {
-        $maybeTransitionRequest = $this->getCurrentState()->handle($cmd);
-        if (!is_null($maybeTransitionRequest)) {
-            $this->stateDataStorage->storeFor($this->id, new StateData(
-                uniqid(), 
-                $this->transitions[$this->getCurrentStateId()][$maybeTransitionRequest->edge], 
-                $maybeTransitionRequest->context
-            ));
+        $maybeRequest = $this->getCurrentState()->handle($cmd);
+        if (!is_null($maybeRequest)) {
+            switch (get_class($maybeRequest)) {
+                case Request\TransitionRequest::class:
+                    $this->stateDataStorage->storeFor($this->id, new StateData(
+                        uniqid(), 
+                        $this->transitions[$this->getCurrentStateId()][$maybeRequest->edge], 
+                        $maybeRequest->context
+                    ));
+                    break;
+                case Request\DestructionRequest::class:
+                    $this->remove();
+            }
         }
     }
     
@@ -129,7 +135,7 @@ class Rosmaro implements State
         }
     }
     
-    public function remove()
+    private function remove()
     {
         $this->cleanUp();
         $this->stateDataStorage->removeAllDataFor($this->id);

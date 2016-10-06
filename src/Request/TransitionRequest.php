@@ -24,7 +24,7 @@ class TransitionRequest
     public $edge;
     
     /**
-     * @var Context2
+     * @var Context
      */
     public $context;
     

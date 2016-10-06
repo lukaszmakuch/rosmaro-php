@@ -36,9 +36,13 @@ class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
     protected function handleImpl($cmd)
     {
         /* @var $cmd \lukaszmakuch\Rosmaro\Cmd\PrependSymbols */
+        if ($cmd->howMany == 7) {
+            return new \lukaszmakuch\Rosmaro\Request\DestructionRequest();
+        }
+        
         $newMsg = str_repeat($this->symbol, $cmd->howMany) . $this->fetchMessage();
         $newContext = $this->context->getCopyWith(['msg' => $newMsg]);
-        return $this->causeTransition(
+        return new \lukaszmakuch\Rosmaro\Request\TransitionRequest(
             ($cmd->howMany > 1 ? "prepended_more_than_1" : "prepended_less_than_2"), 
             $newContext
         );

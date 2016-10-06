@@ -36,7 +36,7 @@ class HashAppender extends \lukaszmakuch\Rosmaro\StateTpl
     protected function handleImpl($cmd)
     {
         $this->howManyAppended++;
-        return $this->causeTransition("appended", $this->context->getCopyWith([
+        return new \lukaszmakuch\Rosmaro\Request\TransitionRequest("appended", $this->context->getCopyWith([
             'msg' => $this->getBuiltMessage() . "#"
         ]));
     }

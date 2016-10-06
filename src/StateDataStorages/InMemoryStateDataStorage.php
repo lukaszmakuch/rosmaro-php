@@ -17,6 +17,15 @@ class InMemoryStateDataStorage implements StateDataStorage
 {
     private $stateDataStackByRosmaroId = [];
     
+    /**
+     * @param String $rosmaroId
+     * @return boolean
+     */
+    public function isEmptyFor($rosmaroId)
+    {
+        return !isset($this->stateDataStackByRosmaroId[$rosmaroId]);
+    }
+    
     public function getAllFor($rosmaroId)
     {
         return isset($this->stateDataStackByRosmaroId[$rosmaroId])
@@ -58,5 +67,4 @@ class InMemoryStateDataStorage implements StateDataStorage
         
         $this->stateDataStackByRosmaroId[$rosmaroId][] = $stateData;
     }
-
 }

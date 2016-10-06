@@ -20,6 +20,10 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
 {
     private $howManyHashesAppended = 0;
     private $rosmaroFactory;
+    
+    /**
+     * @var StateDataStorages\InMemoryStateDataStorage
+     */
     private $stateDataStorage;
     
     protected function setUp()
@@ -118,6 +122,17 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(2, $this->howManyHashesAppended);
         $r->cleanUp();
         $this->assertEquals(0, $this->howManyHashesAppended);
+    }
+    
+    public function testDestruction()
+    {
+        $r = $this->getRosmaro("a");
+        
+        $r->handle(new AddOneSymbol());
+        $r->handle(new PrependSymbols(7)); //this caused a DestructionRequest
+        
+        $this->assertEquals(0, $this->howManyHashesAppended);
+        $this->assertTrue($this->stateDataStorage->isEmptyFor("a"));
     }
     
     public function testManyIndependentInstances()
