@@ -18,6 +18,7 @@ class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
         $this->symbol = $symbol;
     }
     
+    
     /**
      * @return String
      */
@@ -32,12 +33,23 @@ class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
     {
         return \lukaszmakuch\Rosmaro\Cmd\PrependSymbols::class;
     }
+    
+    protected function throwExceptionIfInvalidContext()
+    {
+        if (strlen($this->fetchMessage()) >= 50) {
+            throw new \lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd("too long message");
+        }
+    }
 
     protected function handleImpl($cmd)
     {
         /* @var $cmd \lukaszmakuch\Rosmaro\Cmd\PrependSymbols */
         if ($cmd->howMany == 7) {
             return new \lukaszmakuch\Rosmaro\Request\DestructionRequest();
+        }
+        
+        if ($cmd->howMany == 99) {
+            throw new \lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd("99 is a bad number");
         }
         
         $newMsg = str_repeat($this->symbol, $cmd->howMany) . $this->fetchMessage();

@@ -11,8 +11,12 @@ namespace lukaszmakuch\Rosmaro;
 
 use lukaszmakuch\Rosmaro\Cmd\AddOneSymbol;
 use lukaszmakuch\Rosmaro\Cmd\PrependSymbols;
+use lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd;
+use lukaszmakuch\Rosmaro\Graph\Arrow;
+use lukaszmakuch\Rosmaro\Graph\Node;
 use lukaszmakuch\Rosmaro\State\HashAppender;
 use lukaszmakuch\Rosmaro\State\SymbolPrepender;
+use lukaszmakuch\Rosmaro\StateDataStorages\InMemoryStateDataStorage;
 use lukaszmakuch\Rosmaro\StateVisitors\CallableBasedVisitor;
 use PHPUnit_Framework_TestCase;
 
@@ -22,7 +26,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
     private $rosmaroFactory;
     
     /**
-     * @var StateDataStorages\InMemoryStateDataStorage
+     * @var InMemoryStateDataStorage
      */
     private $stateDataStorage;
     
@@ -53,7 +57,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
                 $this->stateDataStorage
             );
         };
-        $this->stateDataStorage = new StateDataStorages\InMemoryStateDataStorage();
+        $this->stateDataStorage = new InMemoryStateDataStorage();
     }
 
     public function testTransitions()
@@ -79,6 +83,50 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $r->handle(new PrependSymbols(1));
         
         $this->assertSymbolPrepender($r, "bbaaa##");
+    }
+    
+    public function testStateUnableToHandleRequest()
+    {
+        $r = $this->getRosmaro("a");
+        $r->handle(new AddOneSymbol());
+        
+        $this->setExpectedExceptionRegExp(
+            UnableToHandleCmd::class, 
+            '@bad number@'
+        );
+        $r->handle(new PrependSymbols(99));
+    }
+    
+    public function testUnsupportedCommand()
+    {
+        $r = $this->getRosmaro("a");
+        $this->setExpectedExceptionRegExp(
+            UnableToHandleCmd::class, 
+            '@supports only.*AddOneSymbol.*PrependSymbols was given@'
+        );
+        $r->handle(new PrependSymbols(1));
+    }
+    
+    public function testIncorrectContext()
+    {
+        $r = $this->getRosmaro("a");
+        $r->handle(new AddOneSymbol());
+        $r->handle(new PrependSymbols(49));
+        $this->setExpectedExceptionRegExp(
+            UnableToHandleCmd::class, 
+            '@too long@'
+        );
+        //for this command the message in the context will be too long
+        $r->handle(new PrependSymbols(1)); 
+    }
+    
+    public function testVisitingActualStates()
+    {
+        $r = $this->getRosmaro("a");
+        $visitedState = $r->accept(new CallableBasedVisitor(function (State $s) {
+            return $s;
+        }));
+        $this->assertHashAppender($visitedState, '');
     }
     
     public function testRevertingToState()
@@ -170,38 +218,38 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $appendHashNode = $r->getGraph();
         
         //expected nodes
-        $expectedAppendHash = new Graph\Node();
+        $expectedAppendHash = new Node();
         $expectedAppendHash->id = "append_hash";
         
-        $expectedPrependA = new Graph\Node();
+        $expectedPrependA = new Node();
         $expectedPrependA->id = "prepend_a";
         $expectedPrependA->isCurrent = true;
         
-        $expectedPrependB = new Graph\Node();
+        $expectedPrependB = new Node();
         $expectedPrependB->id = "prepend_b";
         
         //expected arrows
-        $expectedAppendHashToPrependA = new Graph\Arrow();
+        $expectedAppendHashToPrependA = new Arrow();
         $expectedAppendHashToPrependA->id = "appended";
         $expectedAppendHashToPrependA->head = $appendHashNode;
         $expectedAppendHashToPrependA->tail = $expectedPrependA;
         
-        $expectedPrependAToPrependB = new Graph\Arrow();
+        $expectedPrependAToPrependB = new Arrow();
         $expectedPrependAToPrependB->id = "prepended_more_than_1";
         $expectedPrependAToPrependB->head = $expectedPrependA;
         $expectedPrependAToPrependB->tail = $expectedPrependB;
         
-        $expectedPrependAToAppendHash = new Graph\Arrow();
+        $expectedPrependAToAppendHash = new Arrow();
         $expectedPrependAToAppendHash->id = "prepended_less_than_2";
         $expectedPrependAToAppendHash->head = $expectedPrependA;
         $expectedPrependAToAppendHash->tail = $expectedAppendHash;
         
-        $expectedPrependBToPrependB1 = new Graph\Arrow();
+        $expectedPrependBToPrependB1 = new Arrow();
         $expectedPrependBToPrependB1->id = "prepended_more_than_1";
         $expectedPrependBToPrependB1->head = $expectedPrependB;
         $expectedPrependBToPrependB1->tail = $expectedPrependB;
         
-        $expectedPrependBToPrependB2 = new Graph\Arrow();
+        $expectedPrependBToPrependB2 = new Arrow();
         $expectedPrependBToPrependB2->id = "prepended_less_than_2";
         $expectedPrependBToPrependB2->head = $expectedPrependB;
         $expectedPrependBToPrependB2->tail = $expectedPrependB;

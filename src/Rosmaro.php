@@ -64,8 +64,6 @@ class Rosmaro implements State
         return $nodeById[$this->initialStateId];
     }
     
-
-
     public function accept(StateVisitor $v)
     {
         return $this->getCurrentState()->accept($v);

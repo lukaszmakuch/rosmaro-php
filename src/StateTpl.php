@@ -18,7 +18,15 @@ abstract class StateTpl implements State
      */
     protected $context;
     
+    /**
+     * @var String|null null if hasn't been set yet
+     */
     private $id;
+    
+    public function __construct()
+    {
+        $this->context = new Context();
+    }
     
     public function handle($cmd)
     {
@@ -37,6 +45,9 @@ abstract class StateTpl implements State
         return $this->id;
     }
     
+    /**
+     * @param String $id
+     */
     public function setId($id)
     {
         $this->id = $id;
@@ -44,7 +55,7 @@ abstract class StateTpl implements State
     
     public function accept(StateVisitor $v)
     {
-        $v->visit($this);
+        return $v->visit($this);
     }
     
     public function cleanUp()
@@ -53,6 +64,9 @@ abstract class StateTpl implements State
     
     protected abstract function getClassOfSupportedCommands();
     
+    /**
+     * @throws Exception\UnableToHandleCmd
+     */
     protected function throwExceptionIfInvalidContext()
     {
     }
@@ -68,9 +82,13 @@ abstract class StateTpl implements State
             !is_object($cmd)
             || (!($cmd instanceof $supportedClass))
         ) {
-            throw new Exception\UnableToHandleCmd();
+            throw new Exception\UnableToHandleCmd(sprintf(
+                "%s supports only %s, but %s was given",
+                get_class($this),
+                $supportedClass,
+                get_class($cmd)
+            ));
         }
-        
     }
     
     /**
