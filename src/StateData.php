@@ -11,11 +11,22 @@ namespace lukaszmakuch\Rosmaro;
 
 class StateData
 {
+    /**
+     * @var String
+     */
     public $id;
+    
+    /**
+     * @var String
+     */
     public $stateId;
+    
+    /**
+     * @var Context 
+     */
     public $context;
     
-    public function __construct($id, $stateId, $context)
+    public function __construct($id, $stateId, Context $context)
     {
         $this->id = $id;
         $this->stateId = $stateId;

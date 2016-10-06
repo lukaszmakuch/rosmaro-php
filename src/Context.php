@@ -9,7 +9,10 @@
 
 namespace lukaszmakuch\Rosmaro;
 
-class Context implements \Serializable
+use lukaszmakuch\Rosmaro\Exception\NotFoundInContext;
+use Serializable;
+
+class Context implements Serializable
 {
     private $values;
     
@@ -20,13 +23,13 @@ class Context implements \Serializable
     
     /**
      * @param String $key
-     * @return \Serializable|String|int|bool|float
-     * @throws Exception\NotFoundInContext
+     * @return Serializable|String|int|bool|float
+     * @throws NotFoundInContext
      */
     public function get($key)
     {
         if (!$this->has($key)) {
-            throw new Exception\NotFoundInContext();
+            throw new NotFoundInContext();
         }
         
         return $this->values[$key];

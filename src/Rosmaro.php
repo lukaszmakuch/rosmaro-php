@@ -9,6 +9,12 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Exception\StateDataNotFound;
+use lukaszmakuch\Rosmaro\Graph\Arrow;
+use lukaszmakuch\Rosmaro\Graph\Node;
+use lukaszmakuch\Rosmaro\Request\DestructionRequest;
+use lukaszmakuch\Rosmaro\Request\TransitionRequest;
+
 class Rosmaro implements State
 {
     private $id;
@@ -22,7 +28,7 @@ class Rosmaro implements State
         $initialStateId,
         array $transtions,
         array $statePrototypes,
-        \lukaszmakuch\Rosmaro\StateDataStorage $stateDataStorage
+        StateDataStorage $stateDataStorage
     ) {
         $this->id = $id;
         $this->stateDataStorage = $stateDataStorage;
@@ -32,7 +38,7 @@ class Rosmaro implements State
     }
     
     /**
-     * @return Graph\Node
+     * @return Node
      */
     public function getGraph()
     {
@@ -44,7 +50,7 @@ class Rosmaro implements State
             array_keys($this->transitions))
         );
         foreach ($idsOfNodes as $nodeId) {
-            $nodeById[$nodeId] = new Graph\Node();
+            $nodeById[$nodeId] = new Node();
             $nodeById[$nodeId]->id = $nodeId;
             $nodeById[$nodeId]->isCurrent = ($nodeId == $currentNodeId);
         }
@@ -52,7 +58,7 @@ class Rosmaro implements State
         //add arrows
         foreach ($this->transitions as $headNodeId => $arrowsData) {
             foreach ($arrowsData as $arrowId => $tailNodeId) {
-                $arrow = new Graph\Arrow();
+                $arrow = new Arrow();
                 $arrow->id = $arrowId;
                 $arrow->head = $nodeById[$headNodeId];
                 $arrow->tail = $nodeById[$tailNodeId];
@@ -74,14 +80,14 @@ class Rosmaro implements State
         $maybeRequest = $this->getCurrentState()->handle($cmd);
         if (!is_null($maybeRequest)) {
             switch (get_class($maybeRequest)) {
-                case Request\TransitionRequest::class:
+                case TransitionRequest::class:
                     $this->stateDataStorage->storeFor($this->id, new StateData(
                         uniqid(), 
                         $this->transitions[$this->getCurrentStateId()][$maybeRequest->edge], 
                         $maybeRequest->context
                     ));
                     break;
-                case Request\DestructionRequest::class:
+                case DestructionRequest::class:
                     $this->remove();
             }
         }
@@ -151,7 +157,7 @@ class Rosmaro implements State
                 $stateData->stateId, 
                 $stateData->context
             );
-        } catch (Exception\StateDataNotFound $e) {
+        } catch (StateDataNotFound $e) {
             return $this->buildState(
                 null, 
                 $this->initialStateId, 
@@ -172,7 +178,7 @@ class Rosmaro implements State
     {
         try {
             return $this->stateDataStorage->getRecentFor($this->id)->stateId;
-        } catch (Exception\StateDataNotFound $e) {
+        } catch (StateDataNotFound $e) {
             return $this->initialStateId;
         }
     }

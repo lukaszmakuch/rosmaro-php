@@ -9,7 +9,10 @@
 
 namespace lukaszmakuch\Rosmaro\StateVisitors;
 
-class CallableBasedVisitor implements \lukaszmakuch\Rosmaro\StateVisitor
+use lukaszmakuch\Rosmaro\State;
+use lukaszmakuch\Rosmaro\StateVisitor;
+
+class CallableBasedVisitor implements StateVisitor
 {
     private $callableVisitor;
     
@@ -18,7 +21,7 @@ class CallableBasedVisitor implements \lukaszmakuch\Rosmaro\StateVisitor
         $this->callableVisitor = $visitor;
     }
     
-    public function visit(\lukaszmakuch\Rosmaro\State $s)
+    public function visit(State $s)
     {
         $v = $this->callableVisitor;
         return $v($s);

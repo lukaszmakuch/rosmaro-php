@@ -9,8 +9,8 @@
 
 namespace lukaszmakuch\Rosmaro;
 
-use lukaszmakuch\Rosmaro\Request\TransitionRequest;
 use lukaszmakuch\Rosmaro\Request\DestructionRequest;
+use lukaszmakuch\Rosmaro\Request\TransitionRequest;
 
 interface State
 {

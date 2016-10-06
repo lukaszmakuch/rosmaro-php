@@ -9,6 +9,7 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd;
 use lukaszmakuch\Rosmaro\Request\TransitionRequest;
 
 abstract class StateTpl implements State
@@ -65,7 +66,7 @@ abstract class StateTpl implements State
     protected abstract function getClassOfSupportedCommands();
     
     /**
-     * @throws Exception\UnableToHandleCmd
+     * @throws UnableToHandleCmd
      */
     protected function throwExceptionIfInvalidContext()
     {
@@ -73,7 +74,7 @@ abstract class StateTpl implements State
     
     /**
      * @param mixed $cmd
-     * @throws Exception\UnableToHandleCmd
+     * @throws UnableToHandleCmd
      */
     protected function throwExceptionIfUnsupported($cmd)
     {
@@ -82,7 +83,7 @@ abstract class StateTpl implements State
             !is_object($cmd)
             || (!($cmd instanceof $supportedClass))
         ) {
-            throw new Exception\UnableToHandleCmd(sprintf(
+            throw new UnableToHandleCmd(sprintf(
                 "%s supports only %s, but %s was given",
                 get_class($this),
                 $supportedClass,
@@ -92,7 +93,7 @@ abstract class StateTpl implements State
     }
     
     /**
-     * @throws Exception\UnableToHandleCmd
+     * @throws UnableToHandleCmd
      * @return TransitionRequest|null
      */
     protected abstract function handleImpl($cmd);
