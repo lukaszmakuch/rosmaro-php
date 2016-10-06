@@ -25,5 +25,38 @@ class Node
      * @var String
      */
     public $id = "";
+    
+    /**
+     * @param String $id
+     * @return Arrow|null null if not found
+     */
+    public function getArrowFromItWith($id)
+    {
+        foreach ($this->arrowsFromIt as $a) {
+            if ($a->id == $id) {
+                return $a;
+            }
+        }
+    }
+    
+    /**
+     * @param String $id
+     * @return Node|null null if not found
+     */
+    public function getSuccessorOrItselfWith($id)
+    {
+        if ($this->id == $id) {
+            return $this;
+        }
+        
+        foreach ($this->arrowsFromIt as $a) {
+            $foundNode = $a->head->getSuccessorOrItselfWith($id);
+            if (!is_null($foundNode)) {
+                return $foundNode;
+            }
+        }
+        
+        return null;
+    }
 }
 

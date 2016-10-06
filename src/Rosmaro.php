@@ -155,6 +155,11 @@ class Rosmaro implements State
             );
         }
     }
+
+    public function getId()
+    {
+        return null;
+    }
     
     /**
      * @return String
@@ -174,10 +179,5 @@ class Rosmaro implements State
         $s->setContext($context);
         $s->setId($stateInstanceId);
         return $s;
-    }
-
-    public function getId()
-    {
-        return null;
     }
 }
