@@ -231,28 +231,28 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         //expected arrows
         $expectedAppendHashToPrependA = new Arrow();
         $expectedAppendHashToPrependA->id = "appended";
-        $expectedAppendHashToPrependA->head = $appendHashNode;
-        $expectedAppendHashToPrependA->tail = $expectedPrependA;
+        $expectedAppendHashToPrependA->tail = $appendHashNode;
+        $expectedAppendHashToPrependA->head = $expectedPrependA;
         
         $expectedPrependAToPrependB = new Arrow();
         $expectedPrependAToPrependB->id = "prepended_more_than_1";
-        $expectedPrependAToPrependB->head = $expectedPrependA;
-        $expectedPrependAToPrependB->tail = $expectedPrependB;
+        $expectedPrependAToPrependB->tail = $expectedPrependA;
+        $expectedPrependAToPrependB->head = $expectedPrependB;
         
         $expectedPrependAToAppendHash = new Arrow();
         $expectedPrependAToAppendHash->id = "prepended_less_than_2";
-        $expectedPrependAToAppendHash->head = $expectedPrependA;
-        $expectedPrependAToAppendHash->tail = $expectedAppendHash;
+        $expectedPrependAToAppendHash->tail = $expectedPrependA;
+        $expectedPrependAToAppendHash->head = $expectedAppendHash;
         
         $expectedPrependBToPrependB1 = new Arrow();
         $expectedPrependBToPrependB1->id = "prepended_more_than_1";
-        $expectedPrependBToPrependB1->head = $expectedPrependB;
         $expectedPrependBToPrependB1->tail = $expectedPrependB;
+        $expectedPrependBToPrependB1->head = $expectedPrependB;
         
         $expectedPrependBToPrependB2 = new Arrow();
         $expectedPrependBToPrependB2->id = "prepended_less_than_2";
-        $expectedPrependBToPrependB2->head = $expectedPrependB;
         $expectedPrependBToPrependB2->tail = $expectedPrependB;
+        $expectedPrependBToPrependB2->head = $expectedPrependB;
         
         //connecting nodes with arrows
         $expectedAppendHash->arrowsFromIt[] = $expectedAppendHashToPrependA;

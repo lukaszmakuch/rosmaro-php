@@ -9,6 +9,7 @@
 
 namespace lukaszmakuch\Rosmaro\PathPresenter;
 
+use lukaszmakuch\Rosmaro\Graph\Arrow;
 use lukaszmakuch\Rosmaro\Graph\Node;
 use lukaszmakuch\Rosmaro\Rosmaro;
 use lukaszmakuch\Rosmaro\State;
@@ -29,38 +30,68 @@ class PathPresenter
     public function getNodesOf(Rosmaro $r)
     {
         $allStates = $r->getAllStates();
-        /* @var $currentState State */
         $currentState = end($allStates);
         $visitedNodes = array_map(function (State $s) {
-            return new PathNode($s->getId(), true, false);
+            return new PathNode($s->getStateId(), true, false);
         }, array_slice($allStates, 0, -1));
-            
-        $currentGraphNode = $r->getGraph()->getSuccessorOrItselfWith($currentState->getId());
-        return array_merge($visitedNodes, $this->getPreferredPathFrom($currentGraphNode, true));
+        $currentGraphNode = $r->getGraph()->getSuccessorOrItselfWith($currentState->getStateId());
+        return array_merge($visitedNodes, $this->getPreferredPathFrom($currentGraphNode));
     }
     
     /**
      * @param Node $node
-     * @param boolean $isCurrentNode
-     * @param PathNode[] $path
      * @return PathNode[] 
      */
-    private function getPreferredPathFrom(Node $node, $isCurrentNode, array $path = [])
+    private function getPreferredPathFrom(Node $node)
     {
-        $nodeAsFlatNode = new PathNode($node->id, $isCurrentNode, $isCurrentNode);
-        if (in_array($nodeAsFlatNode, $path)) {
-            return $path;
+        $path = [];
+        $currentNode = $node;
+        while (true) {
+            $newPathNode = $this->mapToPathNode($currentNode);
+            if ($this->inPath($newPathNode, $path)) {
+                break;
+            }
+            
+            $path[] = $newPathNode;
+            if (empty($currentNode->arrowsFromIt)) {
+                break;
+            }
+            
+            $currentNode = $this->getPreferredArrowFrom($currentNode)->head;
         }
         
-        $extendedPath = array_merge($path, [$nodeAsFlatNode]);
-        if (empty($node->arrowsFromIt)) {
-            return $extendedPath;
+        return $path;
+    }
+    
+    private function mapToPathNode(Node $n)
+    {
+        return new PathNode($n->id, $n->isCurrent, $n->isCurrent);
+    }
+    
+    /**
+     * @param Node $n
+     * @return Arrow
+     */
+    private function getPreferredArrowFrom(Node $n)
+    {
+        return isset($this->preferredArrows[$n->id])
+            ? $n->getArrowFromItWith($this->preferredArrows[$n->id])
+            : $n->arrowsFromIt[0];
+    }
+    
+    /**
+     * @param PathNode $n
+     * @param PathNode[] $path
+     * @return boolean
+     */
+    private function inPath(PathNode $n, array $path)
+    {
+        foreach ($path as $alreadyWithinPath) {
+            if ($alreadyWithinPath->equals($n)) {
+                return true;
+            }
         }
-        
-        $preferredArrow = isset($this->preferredArrows[$node->id])
-            ? $node->getArrowFromItWith($this->preferredArrows[$node->id])
-            : $node->arrowsFromIt[0];
-        
-        return $this->getPreferredPathFrom($preferredArrow->head, false, $extendedPath);
+            
+        return false;
     }
 }

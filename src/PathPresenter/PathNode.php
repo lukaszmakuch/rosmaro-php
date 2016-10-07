@@ -38,4 +38,15 @@ class PathNode
         $this->isVisited = $isVisited;
         $this->isCurrent = $isCurrent;
     }
+    
+    /**
+     * @param PathNode $another
+     * @return boolean
+     */
+    public function equals(PathNode $another)
+    {
+        return (($this->id == $another->id)
+            && ($this->isCurrent == $another->isCurrent)
+            && ($this->isVisited == $another->isVisited));
+    }
 }

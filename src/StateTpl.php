@@ -24,6 +24,11 @@ abstract class StateTpl implements State
      */
     private $id;
     
+    /**
+     * @var String|null null if hasn't been set yet
+     */
+    private $stateId;
+    
     public function __construct()
     {
         $this->context = new Context();
@@ -52,6 +57,19 @@ abstract class StateTpl implements State
     public function setId($id)
     {
         $this->id = $id;
+    }
+    
+    public function getStateId()
+    {
+        return $this->stateId;
+    }
+    
+    /**
+     * @param String $stateId
+     */
+    public function setStateId($stateId)
+    {
+        $this->stateId = $stateId;
     }
     
     public function accept(StateVisitor $v)

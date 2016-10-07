@@ -45,12 +45,23 @@ class Node
      */
     public function getSuccessorOrItselfWith($id)
     {
+        $idsOfVisitedNodes = [];
+        return $this->getSuccessorOrItselfWithImpl($id, $idsOfVisitedNodes);
+    }
+    
+    private function getSuccessorOrItselfWithImpl($id, array &$idsOfVisitedNodes)
+    {
         if ($this->id == $id) {
             return $this;
         }
         
+        $idsOfVisitedNodes[] = $this->id;
         foreach ($this->arrowsFromIt as $a) {
-            $foundNode = $a->head->getSuccessorOrItselfWith($id);
+            if (in_array($a->head->id, $idsOfVisitedNodes)) {
+                continue;
+            }
+            
+            $foundNode = $a->head->getSuccessorOrItselfWithImpl($id, $idsOfVisitedNodes);
             if (!is_null($foundNode)) {
                 return $foundNode;
             }

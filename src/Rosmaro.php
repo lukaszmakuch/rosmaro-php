@@ -45,10 +45,7 @@ class Rosmaro implements State
         $currentNodeId = $this->getCurrentStateId();
         //create all nodes
         $nodeById = [];
-        $idsOfNodes = array_unique(array_merge(
-            [$this->initialStateId], 
-            array_keys($this->transitions))
-        );
+        $idsOfNodes = array_keys($this->statePrototypes);
         foreach ($idsOfNodes as $nodeId) {
             $nodeById[$nodeId] = new Node();
             $nodeById[$nodeId]->id = $nodeId;
@@ -56,16 +53,16 @@ class Rosmaro implements State
         }
         
         //add arrows
-        foreach ($this->transitions as $headNodeId => $arrowsData) {
-            foreach ($arrowsData as $arrowId => $tailNodeId) {
+        foreach ($this->transitions as $tailNodeId => $arrowsData) {
+            foreach ($arrowsData as $arrowId => $headNodeId) {
                 $arrow = new Arrow();
                 $arrow->id = $arrowId;
-                $arrow->head = $nodeById[$headNodeId];
                 $arrow->tail = $nodeById[$tailNodeId];
-                $nodeById[$headNodeId]->arrowsFromIt[] = $arrow;
+                $arrow->head = $nodeById[$headNodeId];
+                $nodeById[$tailNodeId]->arrowsFromIt[] = $arrow;
             }
         }
-        
+
         //return the root node
         return $nodeById[$this->initialStateId];
     }
@@ -101,10 +98,11 @@ class Rosmaro implements State
         return array_values(array_merge([
             $this->buildState(null, $this->initialStateId, new Context())
         ], array_map(function (StateData $stateData) {
-            $s = clone $this->statePrototypes[$stateData->stateId];
-            $s->setId($stateData->id);
-            $s->setContext($stateData->context);
-            return $s;
+            return $this->buildState(
+                $stateData->id, 
+                $stateData->stateId, 
+                $stateData->context
+            );
         }, $this->stateDataStorage->getAllFor($this->id))));
     }
     
@@ -168,13 +166,18 @@ class Rosmaro implements State
 
     public function getId()
     {
+        return $this->id;
+    }
+    
+    public function getStateId()
+    {
         return null;
     }
     
     /**
      * @return String
      */
-    private function getCurrentStateId()
+    public function getCurrentStateId()
     {
         try {
             return $this->stateDataStorage->getRecentFor($this->id)->stateId;
@@ -187,6 +190,7 @@ class Rosmaro implements State
     {
         $s = clone $this->statePrototypes[$stateId];
         $s->setContext($context);
+        $s->setStateId($stateId);
         $s->setId($stateInstanceId);
         return $s;
     }

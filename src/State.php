@@ -25,6 +25,11 @@ interface State
      */
     public function getId();
     
+    /**
+     * @return String
+     */
+    public function getStateId();
+    
     public function accept(StateVisitor $v);
     
     public function cleanUp();
