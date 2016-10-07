@@ -24,15 +24,17 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
          *    b-c 
          *   /    
          *  a     
-         *   \    
-         *    d-e
-         *     \
-         *      f
+         *   \  
+         *   /d-e
+         *   \ \
+         *    \_f_
+         *      / \ 
+         *      \_/
          */
         $getRosmaroWithVisited = function (array $nodes) {
             return $this->getRosmaro(
                 ["a", "b", "c", "d", "e", "f"],
-                ["a-b", "b-c", "a-d", "d-e", "d-f"],
+                ["a-b", "b-c", "a-d", "d-e", "d-f", 'f-d', 'f-f'],
                 $nodes
             );
         };

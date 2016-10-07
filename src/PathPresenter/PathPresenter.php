@@ -41,22 +41,26 @@ class PathPresenter
     
     /**
      * @param Node $node
-     * @return PathNode[]
+     * @param boolean $isCurrentNode
+     * @param PathNode[] $path
+     * @return PathNode[] 
      */
-    private function getPreferredPathFrom(Node $node, $isCurrentNode)
+    private function getPreferredPathFrom(Node $node, $isCurrentNode, array $path = [])
     {
         $nodeAsFlatNode = new PathNode($node->id, $isCurrentNode, $isCurrentNode);
+        if (in_array($nodeAsFlatNode, $path)) {
+            return $path;
+        }
+        
+        $extendedPath = array_merge($path, [$nodeAsFlatNode]);
         if (empty($node->arrowsFromIt)) {
-            return [$nodeAsFlatNode];
+            return $extendedPath;
         }
         
         $preferredArrow = isset($this->preferredArrows[$node->id])
             ? $node->getArrowFromItWith($this->preferredArrows[$node->id])
             : $node->arrowsFromIt[0];
         
-        return array_merge(
-            [$nodeAsFlatNode],
-            $this->getPreferredPathFrom($preferredArrow->head, false)
-        );
+        return $this->getPreferredPathFrom($preferredArrow->head, false, $extendedPath);
     }
 }
