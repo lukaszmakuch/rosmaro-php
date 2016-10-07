@@ -85,6 +85,26 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->assertSymbolPrepender($r, "bbaaa##");
     }
     
+    public function testClassBasedVisitor()
+    {
+        $messageReadingVisitor = new StateVisitors\ClassBasedVisitor([
+            HashAppender::class => new CallableBasedVisitor(function (HashAppender $s) {
+                return $s->getBuiltMessage();
+            }),
+            SymbolPrepender::class => new CallableBasedVisitor(function (SymbolPrepender $s) {
+                return $s->fetchMessage();
+            }),
+        ]);
+            
+        $r = $this->getRosmaro("a");
+        $this->assertEquals("", $r->accept($messageReadingVisitor));
+        $r->handle(new AddOneSymbol());
+        $this->assertEquals("#", $r->accept($messageReadingVisitor));
+        
+        $this->setExpectedExceptionRegExp(Exception\VisitationFailed::class);
+        $messageReadingVisitor->visit($this->createMock(State::class));
+    }
+    
     public function testStateUnableToHandleRequest()
     {
         $r = $this->getRosmaro("a");

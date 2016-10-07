@@ -9,7 +9,14 @@
 
 namespace lukaszmakuch\Rosmaro;
 
+use lukaszmakuch\Rosmaro\Exception\VisitationFailed;
+
 interface StateVisitor
 {
+    /**
+     * @param State $s
+     * @return mixed
+     * @throws VisitationFailed
+     */
     public function visit(State $s);
 }
