@@ -22,12 +22,12 @@ interface State
     public function handle($cmd);
     
     /**
-     * @return String|null
+     * @return String like "abc123" (always unique)
      */
-    public function getId();
+    public function getInstanceId();
     
     /**
-     * @return String
+     * @return String like "open" (there may be a different state with the same state id)
      */
     public function getStateId();
     

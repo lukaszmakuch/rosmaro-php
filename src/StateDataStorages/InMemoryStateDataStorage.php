@@ -26,17 +26,19 @@ class InMemoryStateDataStorage implements StateDataStorage
         return !isset($this->stateDataStackByRosmaroId[$rosmaroId]);
     }
     
-    public function getAllFor($rosmaroId)
-    {
-        return isset($this->stateDataStackByRosmaroId[$rosmaroId])
-            ? $this->stateDataStackByRosmaroId[$rosmaroId]
-            : [];
-    }
-
-    public function getRecentFor($rosmaroId)
+    public function getAllFor($rosmaroId, StateData $stateDataToStoreIfNothingFound)
     {
         if (!isset($this->stateDataStackByRosmaroId[$rosmaroId])) {
-            throw new StateDataNotFound();
+            $this->stateDataStackByRosmaroId[$rosmaroId] = [$stateDataToStoreIfNothingFound];
+        }
+        
+        return $this->stateDataStackByRosmaroId[$rosmaroId];
+    }
+
+    public function getRecentFor($rosmaroId, StateData $stateDataToStoreIfNothingFound)
+    {
+        if (!isset($this->stateDataStackByRosmaroId[$rosmaroId])) {
+            $this->stateDataStackByRosmaroId[$rosmaroId] = [$stateDataToStoreIfNothingFound];
         }
         
         return end($this->stateDataStackByRosmaroId[$rosmaroId]);
@@ -50,7 +52,7 @@ class InMemoryStateDataStorage implements StateDataStorage
     public function revertFor($rosmaroId, $stateDataId)
     {
         $newStack = [];
-        foreach ($this->getAllFor($rosmaroId) as $stateDataFromOldStack) {
+        foreach ($this->stateDataStackByRosmaroId[$rosmaroId] as $stateDataFromOldStack) {
             $newStack[] = $stateDataFromOldStack;
             if ($stateDataFromOldStack->id == $stateDataId) {
                 $this->stateDataStackByRosmaroId[$rosmaroId] = $newStack;

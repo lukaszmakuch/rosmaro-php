@@ -297,14 +297,16 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
     private function assertHashAppender(State $s, $msg)
     {
         $this->assertState($s, HashAppender::class, function (HashAppender $s) use ($msg) { return (
-            $s->getBuiltMessage() == $msg
+            !empty($s->getInstanceId())
+            && ($s->getBuiltMessage() == $msg)
         ); });
     }
     
     private function assertSymbolPrepender(State $s, $msg)
     {
         $this->assertState($s, SymbolPrepender::class, function (SymbolPrepender $s) use ($msg) { return (
-            $s->fetchMessage() == $msg
+            !empty($s->getInstanceId())
+            && ($s->fetchMessage() == $msg)
         ); });
     }
     

@@ -9,7 +9,6 @@
 
 namespace lukaszmakuch\Rosmaro;
 
-use lukaszmakuch\Rosmaro\Exception\StateDataNotFound;
 use lukaszmakuch\Rosmaro\Graph\Arrow;
 use lukaszmakuch\Rosmaro\Graph\Node;
 use lukaszmakuch\Rosmaro\Request\DestructionRequest;
@@ -22,6 +21,7 @@ class Rosmaro implements State
     private $stateDataStorage;
     private $transitions;
     private $statePrototypes;
+    private $initialStateData;
     
     public function __construct(
         $id,
@@ -35,6 +35,11 @@ class Rosmaro implements State
         $this->transitions = $transtions;
         $this->statePrototypes = $statePrototypes;
         $this->initialStateId = $initialStateId;
+        $this->initialStateData = new StateData(
+            uniqid(), 
+            $this->initialStateId, 
+            new Context()
+        );
     }
     
     /**
@@ -42,14 +47,13 @@ class Rosmaro implements State
      */
     public function getGraph()
     {
-        $currentNodeId = $this->getCurrentStateId();
         //create all nodes
         $nodeById = [];
         $idsOfNodes = array_keys($this->statePrototypes);
         foreach ($idsOfNodes as $nodeId) {
             $nodeById[$nodeId] = new Node();
             $nodeById[$nodeId]->id = $nodeId;
-            $nodeById[$nodeId]->isCurrent = ($nodeId == $currentNodeId);
+            $nodeById[$nodeId]->isCurrent = ($nodeId == $this->getCurrentStateId());
         }
         
         //add arrows
@@ -95,15 +99,16 @@ class Rosmaro implements State
      */
     public function getAllStates()
     {
-        return array_values(array_merge([
-            $this->buildState(null, $this->initialStateId, new Context())
-        ], array_map(function (StateData $stateData) {
+        return array_values(array_map(function (StateData $stateData) {
             return $this->buildState(
                 $stateData->id, 
                 $stateData->stateId, 
                 $stateData->context
             );
-        }, $this->stateDataStorage->getAllFor($this->id))));
+        }, $this->stateDataStorage->getAllFor(
+            $this->id,
+            $this->initialStateData
+        )));
     }
     
     public function revertTo(State $s)
@@ -111,7 +116,7 @@ class Rosmaro implements State
         $abandonedStates = [];
         $isAbandoned = false;
         foreach ($this->getAllStates() as $possiblyAbandoned) {
-            if ($possiblyAbandoned->getId() == $s->getId()) {
+            if ($possiblyAbandoned->getInstanceId() == $s->getInstanceId()) {
                 $isAbandoned = true;
             }
             if ($isAbandoned) {
@@ -119,10 +124,10 @@ class Rosmaro implements State
             }
         }
         
-        if (is_null($s->getId())) {
+        if (is_null($s->getInstanceId())) {
             $this->stateDataStorage->removeAllDataFor($this->id);
         } else {
-            $this->stateDataStorage->revertFor($this->id, $s->getId());
+            $this->stateDataStorage->revertFor($this->id, $s->getInstanceId());
         }
         
         foreach ($abandonedStates as $toClean) {
@@ -148,42 +153,36 @@ class Rosmaro implements State
      */
     private function getCurrentState()
     {
-        try {
-            $stateData = $this->stateDataStorage->getRecentFor($this->id);
-            return $this->buildState(
-                $stateData->id, 
-                $stateData->stateId, 
-                $stateData->context
-            );
-        } catch (StateDataNotFound $e) {
-            return $this->buildState(
-                null, 
-                $this->initialStateId, 
-                new Context()
-            );
-        }
+        $stateData = $this->stateDataStorage->getRecentFor(
+            $this->id,
+            $this->initialStateData
+        );
+        return $this->buildState(
+            $stateData->id, 
+            $stateData->stateId, 
+            $stateData->context
+        );
     }
 
-    public function getId()
+    public function getInstanceId()
     {
         return $this->id;
     }
     
     public function getStateId()
     {
-        return null;
+        return "rosmaro";
     }
     
     /**
      * @return String
      */
-    public function getCurrentStateId()
+    private function getCurrentStateId()
     {
-        try {
-            return $this->stateDataStorage->getRecentFor($this->id)->stateId;
-        } catch (StateDataNotFound $e) {
-            return $this->initialStateId;
-        }
+        return $this->stateDataStorage->getRecentFor(
+            $this->id,
+            $this->initialStateData
+        )->stateId;
     }
     
     private function buildState($stateInstanceId, $stateId, Context $context)

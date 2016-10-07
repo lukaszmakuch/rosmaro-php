@@ -43,13 +43,13 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
             new PathNode("a", true, true),
             new PathNode("b", false, false),
             new PathNode("c", false, false),
-        ], [], $getRosmaroWithVisited(["b", "a"]));
+        ], [], $getRosmaroWithVisited(["a", "b", "a"]));
         
         $this->assertFlatRepresentation([
             new PathNode("a", true, false),
             new PathNode("d", true, true),
             new PathNode("e", false, false),
-        ], [], $getRosmaroWithVisited(["d"]));
+        ], [], $getRosmaroWithVisited(["a", "d"]));
         
         $this->assertFlatRepresentation([
             new PathNode("a", true, true),
@@ -93,7 +93,7 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
             $rosmaroStorage->storeFor(
                 $rosmaroId, 
                 new StateData(
-                    $s->getId(), 
+                    $s->getInstanceId(), 
                     $s->getStateId(), 
                     new Context([])
                 )

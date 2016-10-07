@@ -46,7 +46,7 @@ abstract class StateTpl implements State
         $this->context = $c;
     }
     
-    public function getId()
+    public function getInstanceId()
     {
         return $this->id;
     }
