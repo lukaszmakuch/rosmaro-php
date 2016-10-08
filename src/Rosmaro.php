@@ -90,6 +90,10 @@ class Rosmaro implements State
                     break;
                 case DestructionRequest::class:
                     $this->remove();
+                    break;
+                case Request\ReversionRequest::class:
+                    $this->revertTo($maybeRequest->stateInstanceId);
+                    break;
             }
         }
     }
@@ -111,12 +115,12 @@ class Rosmaro implements State
         )));
     }
     
-    public function revertTo(State $s)
+    private function revertTo($stateInstanceId)
     {
         $abandonedStates = [];
         $isAbandoned = false;
         foreach ($this->getAllStates() as $possiblyAbandoned) {
-            if ($possiblyAbandoned->getInstanceId() == $s->getInstanceId()) {
+            if ($possiblyAbandoned->getInstanceId() == $stateInstanceId) {
                 $isAbandoned = true;
             }
             if ($isAbandoned) {
@@ -124,12 +128,7 @@ class Rosmaro implements State
             }
         }
         
-        if (is_null($s->getInstanceId())) {
-            $this->stateDataStorage->removeAllDataFor($this->id);
-        } else {
-            $this->stateDataStorage->revertFor($this->id, $s->getInstanceId());
-        }
-        
+        $this->stateDataStorage->revertFor($this->id, $stateInstanceId);
         foreach ($abandonedStates as $toClean) {
             $toClean->cleanUp();
         }

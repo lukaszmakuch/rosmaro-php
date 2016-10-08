@@ -9,7 +9,14 @@
 
 namespace lukaszmakuch\Rosmaro\State;
 
-class HashAppender extends \lukaszmakuch\Rosmaro\StateTpl
+use lukaszmakuch\Rosmaro\Cmd\AddOneSymbol;
+use lukaszmakuch\Rosmaro\Cmd\RevertTo;
+use lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd;
+use lukaszmakuch\Rosmaro\Request\ReversionRequest;
+use lukaszmakuch\Rosmaro\Request\TransitionRequest;
+use lukaszmakuch\Rosmaro\StateTpl;
+
+class HashAppender extends StateTpl
 {
     private $howManyAppended;
     
@@ -28,17 +35,22 @@ class HashAppender extends \lukaszmakuch\Rosmaro\StateTpl
             : "";
     }
 
-    protected function getClassOfSupportedCommands()
-    {
-        return \lukaszmakuch\Rosmaro\Cmd\AddOneSymbol::class;
-    }
-
     protected function handleImpl($cmd)
     {
-        $this->howManyAppended++;
-        return new \lukaszmakuch\Rosmaro\Request\TransitionRequest("appended", $this->context->getCopyWith([
-            'msg' => $this->getBuiltMessage() . "#"
-        ]));
+        switch (get_class($cmd)) {
+            case AddOneSymbol::class:
+                $this->howManyAppended++;
+                return new TransitionRequest("appended", $this->context->getCopyWith([
+                    'msg' => $this->getBuiltMessage() . "#"
+                ]));
+                break;
+            case RevertTo::class:
+                return new ReversionRequest($cmd->stateInstanceId);
+                break;
+            default:
+                throw new UnableToHandleCmd("unsupported command class");
+                
+        }
     }
     
     public function cleanUp()

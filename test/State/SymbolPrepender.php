@@ -9,7 +9,13 @@
 
 namespace lukaszmakuch\Rosmaro\State;
 
-class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
+use lukaszmakuch\Rosmaro\Cmd\PrependSymbols;
+use lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd;
+use lukaszmakuch\Rosmaro\Request\DestructionRequest;
+use lukaszmakuch\Rosmaro\Request\TransitionRequest;
+use lukaszmakuch\Rosmaro\StateTpl;
+
+class SymbolPrepender extends StateTpl
 {
     private $symbol;
     
@@ -28,34 +34,38 @@ class SymbolPrepender extends \lukaszmakuch\Rosmaro\StateTpl
             : "";
     }
 
-    protected function getClassOfSupportedCommands()
-    {
-        return \lukaszmakuch\Rosmaro\Cmd\PrependSymbols::class;
-    }
-    
     protected function throwExceptionIfInvalidContext()
     {
         if (strlen($this->fetchMessage()) >= 50) {
-            throw new \lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd("too long message");
+            throw new UnableToHandleCmd("too long message");
         }
     }
 
     protected function handleImpl($cmd)
     {
-        /* @var $cmd \lukaszmakuch\Rosmaro\Cmd\PrependSymbols */
-        if ($cmd->howMany == 7) {
-            return new \lukaszmakuch\Rosmaro\Request\DestructionRequest();
+        switch (get_class($cmd)) {
+            case PrependSymbols::class:
+                if ($cmd->howMany == 99) {
+                    throw new UnableToHandleCmd("99 is a bad number");
+                }
+                
+                if ($cmd->howMany == 7) {
+                    return new DestructionRequest();
+                }
+                
+                $newMsg = str_repeat($this->symbol, $cmd->howMany) . $this->fetchMessage();
+                $newContext = $this->context->getCopyWith(['msg' => $newMsg]);
+                return new TransitionRequest(
+                    ($cmd->howMany > 1 ? "prepended_more_than_1" : "prepended_less_than_2"), 
+                    $newContext
+                );
+                break;
+            case \lukaszmakuch\Rosmaro\Cmd\RevertTo::class:
+                return new \lukaszmakuch\Rosmaro\Request\ReversionRequest($cmd->stateInstanceId);
+                break;
+            default:
+                throw new UnableToHandleCmd("unsupported command class");
+                
         }
-        
-        if ($cmd->howMany == 99) {
-            throw new \lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd("99 is a bad number");
-        }
-        
-        $newMsg = str_repeat($this->symbol, $cmd->howMany) . $this->fetchMessage();
-        $newContext = $this->context->getCopyWith(['msg' => $newMsg]);
-        return new \lukaszmakuch\Rosmaro\Request\TransitionRequest(
-            ($cmd->howMany > 1 ? "prepended_more_than_1" : "prepended_less_than_2"), 
-            $newContext
-        );
     }
 }

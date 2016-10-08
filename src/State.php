@@ -12,12 +12,13 @@ namespace lukaszmakuch\Rosmaro;
 use lukaszmakuch\Rosmaro\Exception\VisitationFailed;
 use lukaszmakuch\Rosmaro\Request\DestructionRequest;
 use lukaszmakuch\Rosmaro\Request\TransitionRequest;
+use lukaszmakuch\Rosmaro\Request\ReversionRequest;
 
 interface State
 {
     /**
      * @param mixed $cmd
-     * @return TransitionRequest|DestructionRequest|null
+     * @return TransitionRequest|DestructionRequest|ReversionRequest|null
      */
     public function handle($cmd);
     

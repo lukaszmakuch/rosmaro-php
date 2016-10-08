@@ -12,12 +12,14 @@ namespace lukaszmakuch\Rosmaro;
 use lukaszmakuch\Rosmaro\Cmd\AddOneSymbol;
 use lukaszmakuch\Rosmaro\Cmd\PrependSymbols;
 use lukaszmakuch\Rosmaro\Exception\UnableToHandleCmd;
+use lukaszmakuch\Rosmaro\Exception\VisitationFailed;
 use lukaszmakuch\Rosmaro\Graph\Arrow;
 use lukaszmakuch\Rosmaro\Graph\Node;
 use lukaszmakuch\Rosmaro\State\HashAppender;
 use lukaszmakuch\Rosmaro\State\SymbolPrepender;
 use lukaszmakuch\Rosmaro\StateDataStorages\InMemoryStateDataStorage;
 use lukaszmakuch\Rosmaro\StateVisitors\CallableBasedVisitor;
+use lukaszmakuch\Rosmaro\StateVisitors\ClassBasedVisitor;
 use PHPUnit_Framework_TestCase;
 
 class RosmaroTest extends PHPUnit_Framework_TestCase
@@ -87,7 +89,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
     
     public function testClassBasedVisitor()
     {
-        $messageReadingVisitor = new StateVisitors\ClassBasedVisitor([
+        $messageReadingVisitor = new ClassBasedVisitor([
             HashAppender::class => new CallableBasedVisitor(function (HashAppender $s) {
                 return $s->getBuiltMessage();
             }),
@@ -101,7 +103,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $r->handle(new AddOneSymbol());
         $this->assertEquals("#", $r->accept($messageReadingVisitor));
         
-        $this->setExpectedExceptionRegExp(Exception\VisitationFailed::class);
+        $this->setExpectedExceptionRegExp(VisitationFailed::class);
         $messageReadingVisitor->visit($this->createMock(State::class));
     }
     
@@ -120,10 +122,7 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
     public function testUnsupportedCommand()
     {
         $r = $this->getRosmaro("a");
-        $this->setExpectedExceptionRegExp(
-            UnableToHandleCmd::class, 
-            '@supports only.*AddOneSymbol.*PrependSymbols was given@'
-        );
+        $this->setExpectedExceptionRegExp(UnableToHandleCmd::class);
         $r->handle(new PrependSymbols(1));
     }
     
@@ -169,12 +168,12 @@ class RosmaroTest extends PHPUnit_Framework_TestCase
         $this->assertSymbolPrepender($allStates[3], "a##");
         $this->assertEquals(2, $this->howManyHashesAppended);
         
-        $r->revertTo($allStates[1]);
+        $r->handle(new Cmd\RevertTo($allStates[1]->getInstanceId()));
         $r->handle(new PrependSymbols(2));
         $this->assertSymbolPrepender($r, "aa#");
         $this->assertEquals(1, $this->howManyHashesAppended);
-        
-        $r->revertTo($allStates[0]);
+
+        $r->handle(new Cmd\RevertTo($allStates[0]->getInstanceId()));
         $this->assertHashAppender($r, "");
         $this->assertEquals(0, $this->howManyHashesAppended);
     }

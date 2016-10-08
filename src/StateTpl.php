@@ -37,7 +37,6 @@ abstract class StateTpl implements State
     public function handle($cmd)
     {
         $this->throwExceptionIfInvalidContext();
-        $this->throwExceptionIfUnsupported($cmd);
         return $this->handleImpl($cmd);
     }
     
@@ -81,33 +80,11 @@ abstract class StateTpl implements State
     {
     }
     
-    protected abstract function getClassOfSupportedCommands();
-    
     /**
      * @throws UnableToHandleCmd
      */
     protected function throwExceptionIfInvalidContext()
     {
-    }
-    
-    /**
-     * @param mixed $cmd
-     * @throws UnableToHandleCmd
-     */
-    protected function throwExceptionIfUnsupported($cmd)
-    {
-        $supportedClass = $this->getClassOfSupportedCommands();
-        if (
-            !is_object($cmd)
-            || (!($cmd instanceof $supportedClass))
-        ) {
-            throw new UnableToHandleCmd(sprintf(
-                "%s supports only %s, but %s was given",
-                get_class($this),
-                $supportedClass,
-                get_class($cmd)
-            ));
-        }
     }
     
     /**
