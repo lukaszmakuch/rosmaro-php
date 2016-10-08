@@ -31,9 +31,9 @@ class PathPresenter
     {
         $allStates = $r->getAllStates();
         $currentState = end($allStates);
-        $visitedNodes = array_map(function (State $s) {
-            return new PathNode($s->getStateId(), true, false);
-        }, array_slice($allStates, 0, -1));
+        $visitedNodes = array_map(function (State $s) use ($currentState) {
+            return new PathNode($s->getInstanceId(), $s->getStateId(), true, $s === $currentState);
+        }, $allStates);
         $currentGraphNode = $r->getGraph()->getSuccessorOrItselfWith($currentState->getStateId());
         return array_merge($visitedNodes, $this->getPreferredPathFrom($currentGraphNode));
     }
@@ -60,12 +60,12 @@ class PathPresenter
             $currentNode = $this->getPreferredArrowFrom($currentNode)->head;
         }
         
-        return $path;
+        return array_slice($path, 1);
     }
     
     private function mapToPathNode(Node $n)
     {
-        return new PathNode($n->id, $n->isCurrent, $n->isCurrent);
+        return new PathNode(null, $n->id, $n->isCurrent, $n->isCurrent);
     }
     
     /**

@@ -24,17 +24,27 @@ class PathNode
     /**
      * @var String
      */
-    public $id;
+    public $stateId;
     
     /**
-     * 
-     * @param String $id
+     * @var String|null
+     */
+    public $stateInstanceIdIfStored;
+    
+    /**
+     * @param String|null $stateInstanceIdIfStored
+     * @param String $stateId
      * @param boolean $isVisited
      * @param boolean $isCurrent
      */
-    public function __construct($id, $isVisited, $isCurrent)
-    {
-        $this->id = $id;
+    public function __construct(
+        $stateInstanceIdIfStored, 
+        $stateId, 
+        $isVisited, 
+        $isCurrent
+    ) {
+        $this->stateInstanceIdIfStored = $stateInstanceIdIfStored;
+        $this->stateId = $stateId;
         $this->isVisited = $isVisited;
         $this->isCurrent = $isCurrent;
     }
@@ -45,7 +55,8 @@ class PathNode
      */
     public function equals(PathNode $another)
     {
-        return (($this->id == $another->id)
+        return (($this->stateId == $another->stateId)
+            && ($this->stateInstanceIdIfStored == $another->stateInstanceIdIfStored)
             && ($this->isCurrent == $another->isCurrent)
             && ($this->isVisited == $another->isVisited));
     }

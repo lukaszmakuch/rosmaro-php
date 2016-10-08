@@ -38,30 +38,30 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
         };
         
         $this->assertFlatRepresentation([
-            new PathNode("a", true, false),
-            new PathNode("b", true, false),
-            new PathNode("a", true, true),
-            new PathNode("b", false, false),
-            new PathNode("c", false, false),
-        ], [], $getRosmaroWithVisited(["a", "b", "a"]));
+            new PathNode("obj1", "a", true, false),
+            new PathNode("obj2", "b", true, false),
+            new PathNode("obj3", "a", true, true),
+            new PathNode(null, "b", false, false),
+            new PathNode(null, "c", false, false),
+        ], [], $getRosmaroWithVisited(["obj1" => "a", "obj2" => "b", "obj3" => "a"]));
         
         $this->assertFlatRepresentation([
-            new PathNode("a", true, false),
-            new PathNode("d", true, true),
-            new PathNode("e", false, false),
-        ], [], $getRosmaroWithVisited(["a", "d"]));
+            new PathNode("obj1", "a", true, false),
+            new PathNode("obj2", "d", true, true),
+            new PathNode(null, "e", false, false),
+        ], [], $getRosmaroWithVisited(["obj1" => "a", "obj2" => "d"]));
         
         $this->assertFlatRepresentation([
-            new PathNode("a", true, true),
-            new PathNode("d", false, false),
-            new PathNode("f", false, false),
-        ], ["a" => "a-d", "d" => "d-f"], $getRosmaroWithVisited([]));
+            new PathNode("obj1", "a", true, true),
+            new PathNode(null, "d", false, false),
+            new PathNode(null, "f", false, false),
+        ], ["a" => "a-d", "d" => "d-f"], $getRosmaroWithVisited(["obj1" => "a"]));
     }
     
     /**
      * @param String[] $idsOfNodes like ["a", "b", ...]
      * @param String[] $arrows like ["a-b", "b-e", ...]
-     * @param String[] $visitedNodes like ["a", "b", "a", ...]
+     * @param String[] $visitedNodes like ["instanceId1" => "a", "instanceId2" => "b", "instanceId3" => "a", ...]
      * @return Rosmaro;
      */
     private function getRosmaro(array $idsOfNodes, array $arrows, array $visitedNodes)
@@ -83,21 +83,12 @@ class PathPresenterTest extends PHPUnit_Framework_TestCase
         }
         
         $rosmaroStorage = new StateDataStorages\InMemoryStateDataStorage();
-        foreach (array_map(function ($stateId) {
-            $s = new SymbolPrepender("a");
-            $s->setId(uniqid());
-            $s->setStateId($stateId);
-            $s->setContext(new Context([]));
-            return $s;
-        }, $visitedNodes) as $s) {
-            $rosmaroStorage->storeFor(
-                $rosmaroId, 
-                new StateData(
-                    $s->getInstanceId(), 
-                    $s->getStateId(), 
-                    new Context([])
-                )
-            );
+        foreach ($visitedNodes as $instanceId => $stateId) {
+            $rosmaroStorage->storeFor($rosmaroId, new StateData(
+                $instanceId, 
+                $stateId, 
+                new Context([])
+            ));
         }
         
         return new Rosmaro(
