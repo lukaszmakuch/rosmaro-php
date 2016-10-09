@@ -18,7 +18,8 @@ class InMemoryStorage
         $rosmaroId,
         $stateDataToStoreIfNothingFound
     ) {
-        return end($this->getAllStatesDataFor($rosmaroId, $stateDataToStoreIfNothingFound));
+        $allStatesData = $this->getAllStatesDataFor($rosmaroId, $stateDataToStoreIfNothingFound);
+        return end($allStatesData);
     }
 
     public function removeAllDataFor($rosmaroId)
