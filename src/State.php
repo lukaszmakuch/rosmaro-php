@@ -10,26 +10,22 @@ abstract class State
     public function setRosmaro($rosmaro)
     {
         $this->rosmaro = $rosmaro;
-        return $this;
     }
 
     public function setContext($context)
     {
         $this->context = $context;
-        return $this;
     }
 
     public function setId($id)
     {
         $this->id = $id;
         $this->idHash = sha1($id);
-        return $this;
     }
 
     public function setType($type)
     {
         $this->type = $type;
-        return $this;
     }
 
     public function transition($arrow, $context)
@@ -37,7 +33,7 @@ abstract class State
         $this->rosmaro->transition($arrow, $context);
     }
 
-    public function revertTo($stateInstanceId)
+    public function revert($stateInstanceId)
     {
         $this->rosmaro->revertTo($stateInstanceId);
     }

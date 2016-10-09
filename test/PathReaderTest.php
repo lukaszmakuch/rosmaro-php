@@ -25,7 +25,7 @@ class PathReaderTest extends \PHPUnit_Framework_TestCase
             );
         };
 
-        $this->assertFlatRepresentation([
+        $this->assertPath([
             ["id" => "obj1", "type" => "a", "visited" => true, "current" => false],
             ["id" => "obj2", "type" => "b", "visited" => true, "current" => false],
             ["id" => "obj3", "type" => "a", "visited" => true, "current" => true],
@@ -33,13 +33,13 @@ class PathReaderTest extends \PHPUnit_Framework_TestCase
             ["id" => null, "type" => "c", "visited" => false, "current" => false],
         ], [], $getRosmaroWithVisited(["obj1" => "a", "obj2" => "b", "obj3" => "a"]));
 
-        $this->assertFlatRepresentation([
+        $this->assertPath([
             ["id" => "obj1", "type" => "a", "visited" => true, "current" => false],
             ["id" => "obj2", "type" => "d", "visited" => true, "current" => true],
             ["id" => null, "type" => "e", "visited" => false, "current" => false],
         ], [], $getRosmaroWithVisited(["obj1" => "a", "obj2" => "d"]));
 
-        $this->assertFlatRepresentation([
+        $this->assertPath([
             ["id" => "obj1", "type" => "a", "visited" => true, "current" => true],
             ["id" => null, "type" => "d", "visited" => false, "current" => false],
             ["id" => null, "type" => "f", "visited" => false, "current" => false],
@@ -64,9 +64,9 @@ class PathReaderTest extends \PHPUnit_Framework_TestCase
             $prototypes[$nodeId] = new SymbolPrepender("?");
         }
 
-        $rosmaroStorage = new InMemoryStorage();
+        $stateDataStorage = new InMemoryStorage();
         foreach ($visitedNodes as $id => $type) {
-            $rosmaroStorage->storeFor($rosmaroId, [
+            $stateDataStorage->storeFor($rosmaroId, [
                 'id' => $id,
                 'type' => $type,
                 'context' => new Context([])
@@ -78,11 +78,11 @@ class PathReaderTest extends \PHPUnit_Framework_TestCase
             reset($idsOfNodes),
             $transitions,
             $prototypes,
-            $rosmaroStorage
+            $stateDataStorage
         );
     }
 
-    private function assertFlatRepresentation($expectedRepresentation, $preferredArrows, $rosmaro)
+    private function assertPath($expectedRepresentation, $preferredArrows, $rosmaro)
     {
         $actualRepresentation = (new PathReader($preferredArrows))->getNodesOf($rosmaro);
         $this->assertEquals(

@@ -8,7 +8,7 @@ class GraphNode
     public $isCurrent = false;
     public $id = "";
 
-    public function getArrowFromItWith($id)
+    public function getArrowFromItWithId($id)
     {
         foreach ($this->arrowsFromIt as $a) {
             if ($a->id == $id) {
@@ -17,13 +17,13 @@ class GraphNode
         }
     }
 
-    public function getSuccessorOrItselfWith($id)
+    public function getSuccessorOrItselfWithId($id)
     {
         $idsOfVisitedNodes = [];
-        return $this->getSuccessorOrItselfWithImpl($id, $idsOfVisitedNodes);
+        return $this->getSuccessorOrItselfWithIdImpl($id, $idsOfVisitedNodes);
     }
 
-    private function getSuccessorOrItselfWithImpl($id, array &$idsOfVisitedNodes)
+    private function getSuccessorOrItselfWithIdImpl($id, &$idsOfVisitedNodes)
     {
         if ($this->id == $id) {
             return $this;
@@ -35,7 +35,7 @@ class GraphNode
                 continue;
             }
 
-            $foundNode = $a->head->getSuccessorOrItselfWithImpl($id, $idsOfVisitedNodes);
+            $foundNode = $a->head->getSuccessorOrItselfWithIdImpl($id, $idsOfVisitedNodes);
             if (!is_null($foundNode)) {
                 return $foundNode;
             }

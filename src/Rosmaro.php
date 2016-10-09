@@ -6,9 +6,9 @@ class Rosmaro
 {
     private $id;
     private $initialState;
-    private $storage;
     private $transitions;
     private $statePrototypes;
+    private $storage;
     private $initialStateData;
 
     public function __construct(
@@ -87,7 +87,6 @@ class Rosmaro
         ]);
     }
 
-
     public function revertTo($stateId)
     {
         $abandonedStates = [];
@@ -96,6 +95,7 @@ class Rosmaro
             if ($possiblyAbandoned->id == $stateId) {
                 $isAbandoned = true;
             }
+
             if ($isAbandoned) {
                 $abandonedStates[] = $possiblyAbandoned;
             }
@@ -131,24 +131,20 @@ class Rosmaro
         $this->storage->removeAllDataFor($this->id);
     }
 
-
     private function getAllStates()
     {
-        return array_values(array_map(function ($stateData) {
+        return array_map(function ($stateData) {
             return $this->buildState(
                 $stateData['id'],
                 $stateData['type'],
                 $stateData['context']
             );
-        }, $this->storage->getAllFor(
-            $this->id,
-            $this->initialStateData
-        )));
+        }, $this->storage->getAllStatesDataFor($this->id, $this->initialStateData));
     }
 
     private function getCurrentState()
     {
-        $stateData = $this->storage->getRecentFor(
+        $stateData = $this->storage->getCurrentStateDataFor(
             $this->id,
             $this->initialStateData
         );
@@ -161,18 +157,15 @@ class Rosmaro
 
     private function getCurrentStateType()
     {
-        return $this->storage->getRecentFor(
-            $this->id,
-            $this->initialStateData
-        )['type'];
+        return $this->getCurrentState()->type;
     }
 
-    private function buildState($stateInstanceId, $stateId, Context $context)
+    private function buildState($id, $type, $context)
     {
-        $s = clone $this->statePrototypes[$stateId];
+        $s = clone $this->statePrototypes[$type];
+        $s->setId($id);
+        $s->setType($type);
         $s->setContext($context);
-        $s->setType($stateId);
-        $s->setId($stateInstanceId);
         $s->setRosmaro($this);
         return $s;
     }

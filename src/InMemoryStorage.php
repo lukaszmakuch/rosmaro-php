@@ -6,30 +6,19 @@ class InMemoryStorage
 {
     private $stackByRosmaroId = [];
 
-    public function isEmptyFor($rosmaroId)
-    {
-        return !isset($this->stackByRosmaroId[$rosmaroId]);
-    }
-
-    public function getAllFor(
+    public function getAllStatesDataFor(
         $rosmaroId,
         $stateDataToStoreIfNothingFound
     ) {
-        if (!isset($this->stackByRosmaroId[$rosmaroId])) {
-            $this->stackByRosmaroId[$rosmaroId] = [$stateDataToStoreIfNothingFound];
-        }
-
-        return $this->stackByRosmaroId[$rosmaroId];
+        $this->storeIfEmptyStackFor($rosmaroId, $stateDataToStoreIfNothingFound);
+        return array_values($this->stackByRosmaroId[$rosmaroId]);
     }
 
-    public function getRecentFor(
+    public function getCurrentStateDataFor(
         $rosmaroId,
         $stateDataToStoreIfNothingFound
     ) {
-        if (!isset($this->stackByRosmaroId[$rosmaroId])) {
-            $this->stackByRosmaroId[$rosmaroId] = [$stateDataToStoreIfNothingFound];
-        }
-
+        $this->storeIfEmptyStackFor($rosmaroId, $stateDataToStoreIfNothingFound);
         return end($this->stackByRosmaroId[$rosmaroId]);
     }
 
@@ -38,10 +27,14 @@ class InMemoryStorage
         unset($this->stackByRosmaroId[$rosmaroId]);
     }
 
-    public function revertFor(
-        $rosmaroId,
-        $stateId
-    ) {
+    public function storeFor($rosmaroId, $stateData)
+    {
+        $this->initEmptyStackIfNotExistFor($rosmaroId);
+        $this->stackByRosmaroId[$rosmaroId][] = $stateData;
+    }
+
+    public function revertFor($rosmaroId, $stateId)
+    {
         $newStack = [];
         foreach ($this->stackByRosmaroId[$rosmaroId] as $stateFromOldStack) {
             $newStack[] = $stateFromOldStack;
@@ -52,14 +45,24 @@ class InMemoryStorage
         }
     }
 
-    public function storeFor(
-        $rosmaroId,
-        $stateData
-    ) {
+    //exists for testing purposes
+    public function isEmptyFor($rosmaroId)
+    {
+        return !isset($this->stackByRosmaroId[$rosmaroId]);
+    }
+
+    private function storeIfEmptyStackFor($rosmaroId, $firstStateData)
+    {
+        $this->initEmptyStackIfNotExistFor($rosmaroId);
+        if (empty($this->stackByRosmaroId[$rosmaroId])) {
+            $this->stackByRosmaroId[$rosmaroId] = [$firstStateData];
+        }
+    }
+
+    private function initEmptyStackIfNotExistFor($rosmaroId)
+    {
         if (!isset($this->stackByRosmaroId[$rosmaroId])) {
             $this->stackByRosmaroId[$rosmaroId] = [];
         }
-
-        $this->stackByRosmaroId[$rosmaroId][] = $stateData;
     }
 }

@@ -23,7 +23,7 @@ class PathReader
                 'current' => $historyEntry['id'] === $recentHistoryEntry['id']
             ];
         }, $history);
-        $currentGraphNode = $rosmaro->graph->getSuccessorOrItselfWith($recentHistoryEntry['type']);
+        $currentGraphNode = $rosmaro->graph->getSuccessorOrItselfWithId($recentHistoryEntry['type']);
         return array_merge(
             $visitedNodes,
             $this->getPreferredPathFrom($currentGraphNode)
@@ -59,7 +59,7 @@ class PathReader
     private function getPreferredArrowFrom($graphNode)
     {
         return isset($this->preferredArrows[$graphNode->id])
-            ? $graphNode->getArrowFromItWith($this->preferredArrows[$graphNode->id])
+            ? $graphNode->getArrowFromItWithId($this->preferredArrows[$graphNode->id])
             : $graphNode->arrowsFromIt[0];
     }
 
