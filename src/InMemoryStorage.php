@@ -18,8 +18,7 @@ class InMemoryStorage
         $rosmaroId,
         $stateDataToStoreIfNothingFound
     ) {
-        $this->storeIfEmptyStackFor($rosmaroId, $stateDataToStoreIfNothingFound);
-        return end($this->stackByRosmaroId[$rosmaroId]);
+        return end($this->getAllStatesDataFor($rosmaroId, $stateDataToStoreIfNothingFound));
     }
 
     public function removeAllDataFor($rosmaroId)
