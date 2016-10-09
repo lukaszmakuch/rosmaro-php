@@ -1,54 +1,33 @@
 <?php
 
-/**
- * This file is part of the Rosmaro library.
- *
- * @author Łukasz Makuch <kontakt@lukaszmakuch.pl>
- * @license MIT http://opensource.org/licenses/MIT
- */
-
 namespace lukaszmakuch\Rosmaro;
 
-use lukaszmakuch\Rosmaro\Exception\NotFoundInContext;
-use Serializable;
-
-class Context implements Serializable
+class Context implements \Serializable
 {
     private $values;
-    
+
     public function __construct($values = [])
     {
         $this->values = $values;
     }
-    
-    /**
-     * @param String $key
-     * @return Serializable|String|int|bool|float
-     * @throws NotFoundInContext
-     */
-    public function get($key)
+
+    public function __get($name)
     {
-        if (!$this->has($key)) {
-            throw new NotFoundInContext();
-        }
-        
-        return $this->values[$key];
+        return isset($this->values[$name])
+            ? $this->values[$name]
+            : null;
     }
-    
-    /**
-     * @param String $key
-     * @return boolean
-     */
-    public function has($key)
+
+    public function __isset($name)
     {
-        return array_key_exists($key, $this->values);
+        return array_key_exists($name, $this->values);
     }
-    
-    public function getCopyWith($differentValues)
+
+    public function copyWith($differentValues)
     {
         return new Context(array_merge($this->values, $differentValues));
     }
-    
+
     public function serialize()
     {
         return serialize($this->values);

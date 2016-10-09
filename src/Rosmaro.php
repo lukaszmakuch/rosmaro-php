@@ -1,65 +1,72 @@
 <?php
 
-/**
- * This file is part of the Rosmaro library.
- *
- * @author Łukasz Makuch <kontakt@lukaszmakuch.pl>
- * @license MIT http://opensource.org/licenses/MIT
- */
-
 namespace lukaszmakuch\Rosmaro;
 
-use lukaszmakuch\Rosmaro\Graph\Arrow;
-use lukaszmakuch\Rosmaro\Graph\Node;
-use lukaszmakuch\Rosmaro\Request\DestructionRequest;
-use lukaszmakuch\Rosmaro\Request\TransitionRequest;
-
-class Rosmaro implements State
+class Rosmaro
 {
     private $id;
-    private $initialStateId;
-    private $stateDataStorage;
+    private $initialState;
+    private $storage;
     private $transitions;
     private $statePrototypes;
     private $initialStateData;
-    
+
     public function __construct(
         $id,
-        $initialStateId,
-        array $transtions,
-        array $statePrototypes,
-        StateDataStorage $stateDataStorage
+        $initialState,
+        $transtions,
+        $statePrototypes,
+        $storage
     ) {
         $this->id = $id;
-        $this->stateDataStorage = $stateDataStorage;
+        $this->storage = $storage;
         $this->transitions = $transtions;
         $this->statePrototypes = $statePrototypes;
-        $this->initialStateId = $initialStateId;
-        $this->initialStateData = new StateData(
-            uniqid(), 
-            $this->initialStateId, 
-            new Context()
-        );
+        $this->initialState = $initialState;
+        $this->initialStateData = [
+            'id' => uniqid(),
+            'type' => $this->initialState,
+            'context' => new Context(),
+        ];
     }
-    
-    /**
-     * @return Node
-     */
-    public function getGraph()
+
+    public function __call($name, $arguments)
+    {
+        return call_user_func_array([$this->getCurrentState(), $name], $arguments);
+    }
+
+    public function __get($name)
+    {
+        switch ($name) {
+            case 'history':
+                return array_map(function ($state) {
+                    return [
+                        'id' => $state->id,
+                        'type' => $state->type,
+                    ];
+                }, $this->getAllStates());
+            case 'graph':
+                return $this->getGraph();
+            default:
+                return $this->getCurrentState()->$name;
+        }
+    }
+
+    private function getGraph()
     {
         //create all nodes
         $nodeById = [];
         $idsOfNodes = array_keys($this->statePrototypes);
         foreach ($idsOfNodes as $nodeId) {
-            $nodeById[$nodeId] = new Node();
+            $nodeById[$nodeId] = new GraphNode();
             $nodeById[$nodeId]->id = $nodeId;
-            $nodeById[$nodeId]->isCurrent = ($nodeId == $this->getCurrentStateId());
+            $nodeById[$nodeId]->isCurrent = ($nodeId == $this->getCurrentStateType());
         }
-        
+
         //add arrows
         foreach ($this->transitions as $tailNodeId => $arrowsData) {
             foreach ($arrowsData as $arrowId => $headNodeId) {
-                $arrow = new Arrow();
+                $arrow = new \stdClass();
                 $arrow->id = $arrowId;
                 $arrow->tail = $nodeById[$tailNodeId];
                 $arrow->head = $nodeById[$headNodeId];
@@ -68,128 +75,105 @@ class Rosmaro implements State
         }
 
         //return the root node
-        return $nodeById[$this->initialStateId];
-    }
-    
-    public function accept(StateVisitor $v)
-    {
-        return $this->getCurrentState()->accept($v);
+        return $nodeById[$this->initialState];
     }
 
-    public function handle($cmd)
+    public function transition($arrow, $context)
     {
-        $maybeRequest = $this->getCurrentState()->handle($cmd);
-        if (!is_null($maybeRequest)) {
-            switch (get_class($maybeRequest)) {
-                case TransitionRequest::class:
-                    $this->stateDataStorage->storeFor($this->id, new StateData(
-                        uniqid(), 
-                        $this->transitions[$this->getCurrentStateId()][$maybeRequest->edge], 
-                        $maybeRequest->context
-                    ));
-                    break;
-                case DestructionRequest::class:
-                    $this->remove();
-                    break;
-                case Request\ReversionRequest::class:
-                    $this->revertTo($maybeRequest->stateInstanceId);
-                    break;
-            }
-        }
+        $this->storage->storeFor($this->id, [
+            'id' => uniqid(),
+            'type' => $this->transitions[$this->getCurrentStateType()][$arrow],
+            'context' => $context
+        ]);
     }
-    
-    /**
-     * @return State[]
-     */
-    public function getAllStates()
-    {
-        return array_values(array_map(function (StateData $stateData) {
-            return $this->buildState(
-                $stateData->id, 
-                $stateData->stateId, 
-                $stateData->context
-            );
-        }, $this->stateDataStorage->getAllFor(
-            $this->id,
-            $this->initialStateData
-        )));
-    }
-    
-    private function revertTo($stateInstanceId)
+
+
+    public function revertTo($stateId)
     {
         $abandonedStates = [];
         $isAbandoned = false;
         foreach ($this->getAllStates() as $possiblyAbandoned) {
-            if ($possiblyAbandoned->getInstanceId() == $stateInstanceId) {
+            if ($possiblyAbandoned->id == $stateId) {
                 $isAbandoned = true;
             }
             if ($isAbandoned) {
                 $abandonedStates[] = $possiblyAbandoned;
             }
         }
-        
-        $this->stateDataStorage->revertFor($this->id, $stateInstanceId);
+
+        $this->storage->revertFor($this->id, $stateId);
         foreach ($abandonedStates as $toClean) {
             $toClean->cleanUp();
         }
     }
-    
+
+    public function revertToPreviousState()
+    {
+        $allStates = $this->getAllStates();
+        if (count($allStates) < 2) {
+            throw new Error("no previous state");
+        }
+
+        $previousState = array_slice($allStates, -2, 1)[0];
+        $this->revertTo($previousState->id);
+    }
+
     public function cleanUp()
     {
         foreach ($this->getAllStates() as $s) {
             $s->cleanUp();
         }
     }
-    
-    private function remove()
+
+    public function remove()
     {
         $this->cleanUp();
-        $this->stateDataStorage->removeAllDataFor($this->id);
+        $this->storage->removeAllDataFor($this->id);
     }
-    
-    /**
-     * @return State
-     */
+
+
+    private function getAllStates()
+    {
+        return array_values(array_map(function ($stateData) {
+            return $this->buildState(
+                $stateData['id'],
+                $stateData['type'],
+                $stateData['context']
+            );
+        }, $this->storage->getAllFor(
+            $this->id,
+            $this->initialStateData
+        )));
+    }
+
     private function getCurrentState()
     {
-        $stateData = $this->stateDataStorage->getRecentFor(
+        $stateData = $this->storage->getRecentFor(
             $this->id,
             $this->initialStateData
         );
         return $this->buildState(
-            $stateData->id, 
-            $stateData->stateId, 
-            $stateData->context
+            $stateData['id'],
+            $stateData['type'],
+            $stateData['context']
         );
     }
 
-    public function getInstanceId()
+    private function getCurrentStateType()
     {
-        return $this->id;
-    }
-    
-    public function getStateId()
-    {
-        return "rosmaro";
-    }
-    
-    /**
-     * @return String
-     */
-    private function getCurrentStateId()
-    {
-        return $this->stateDataStorage->getRecentFor(
+        return $this->storage->getRecentFor(
             $this->id,
             $this->initialStateData
-        )->stateId;
+        )['type'];
     }
-    
+
     private function buildState($stateInstanceId, $stateId, Context $context)
     {
         $s = clone $this->statePrototypes[$stateId];
         $s->setContext($context);
-        $s->setStateId($stateId);
+        $s->setType($stateId);
         $s->setId($stateInstanceId);
+        $s->setRosmaro($this);
         return $s;
     }
 }
