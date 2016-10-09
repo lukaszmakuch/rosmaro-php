@@ -2,9 +2,7 @@
 
 namespace lukaszmakuch\Rosmaro;
 
-use PHPUnit_Framework_TestCase;
-
-class RosmaroTest extends PHPUnit_Framework_TestCase
+class RosmaroTest extends \PHPUnit_Framework_TestCase
 {
     private $howManyHashesAppended = 0;
     private $rosmaroFactory;
