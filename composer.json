@@ -1,6 +1,7 @@
 {
     "name": "lukaszmakuch/rosmaro",
     "type": "library",
+    "description": "Persistent, state machine based objects.",
     "license": "MIT",
     "authors": [
         {
