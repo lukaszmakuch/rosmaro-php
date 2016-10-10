@@ -78,9 +78,6 @@ Reverts the model to the state with the given id.
 ### $rosmaro->remove()
 Removes all data associated with this model.
 
-### $rosmaro->idHash
-An SHA1 hash of the unique identifier of the current state. It changes only when a transition occurs.
-
 ### $rosmaro->history
 An array with identifiers and types of all states of this model.
 ```php
