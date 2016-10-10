@@ -20,7 +20,6 @@ abstract class State
     public function setId($id)
     {
         $this->id = $id;
-        $this->idHash = sha1($id);
     }
 
     public function setType($type)

@@ -63,12 +63,6 @@ class RosmaroTest extends \PHPUnit_Framework_TestCase
         $this->assertSymbolPrepender($r, "bbaaa##");
     }
 
-    public function testStateIdHash()
-    {
-        $r = $this->getRosmaro("a");
-        $this->assertEquals($r->idHash, sha1($r->id));
-    }
-
     public function testRevertingToState()
     {
         $r = $this->getRosmaro("a");
