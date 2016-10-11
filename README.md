@@ -78,6 +78,9 @@ Reverts the model to the state with the given id.
 ### $rosmaro->remove()
 Removes all data associated with this model.
 
+### $rosmaro->intId
+An integer (crc32) id of this model. Changes only when a transition occurs.
+
 ### $rosmaro->history
 An array with identifiers and types of all states of this model.
 ```php

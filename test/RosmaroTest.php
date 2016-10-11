@@ -94,6 +94,15 @@ class RosmaroTest extends \PHPUnit_Framework_TestCase
         $r->revertToPreviousState();
     }
 
+    public function testIntegerId()
+    {
+        $fetchedId = $this->getRosmaro("a")->intId;
+        $fetchedAgain = $this->getRosmaro("a")->intId;
+
+        $this->assertInternalType('int', $fetchedId);
+        $this->assertEquals($fetchedId, $fetchedAgain);
+    }
+
     public function testDestruction()
     {
         $r = $this->getRosmaro("a");

@@ -20,6 +20,7 @@ abstract class State
     public function setId($id)
     {
         $this->id = $id;
+        $this->intId = crc32($id);
     }
 
     public function setType($type)
