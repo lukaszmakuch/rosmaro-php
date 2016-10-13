@@ -33,9 +33,14 @@ abstract class State
         $this->rosmaro->transition($arrow, $context);
     }
 
-    public function revert($stateInstanceId)
+    public function revertTo($stateId)
     {
-        $this->rosmaro->revertTo($stateInstanceId);
+        $this->rosmaro->revertTo($stateId);
+    }
+
+    public function revertToPreviousState()
+    {
+        $this->rosmaro->revertToPreviousState();
     }
 
     public function remove()

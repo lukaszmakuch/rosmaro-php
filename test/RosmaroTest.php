@@ -94,6 +94,26 @@ class RosmaroTest extends \PHPUnit_Framework_TestCase
         $r->revertToPreviousState();
     }
 
+    public function testRedirectingFromStateToParentRosmaro()
+    {
+        $rosmaro = $this->createMock(Rosmaro::class);
+        $state = new SymbolPrepender("a");
+        $state->setRosmaro($rosmaro);
+
+        $rosmaro->expects($this->once())->method("revertTo")->with("a");
+        $state->revertTo("a");
+
+        $rosmaro->expects($this->once())->method("revertToPreviousState");
+        $state->revertToPreviousState();
+
+        $rosmaro->expects($this->once())->method("remove");
+        $state->remove();
+
+        $ctx = new Context();
+        $rosmaro->expects($this->once())->method("transition")->with("a", $ctx);
+        $state->transition("a", $ctx);
+    }
+
     public function testIntegerId()
     {
         $fetchedId = $this->getRosmaro("a")->intId;
